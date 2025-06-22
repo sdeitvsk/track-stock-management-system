@@ -56,9 +56,11 @@ const Dashboard = () => {
     );
   }
 
-  const totalValue = dashboardData.inventory_summary.reduce((sum, item) => sum + item.current_value, 0);
-  const totalStock = dashboardData.inventory_summary.reduce((sum, item) => sum + item.current_stock, 0);
-  const totalIssued = dashboardData.inventory_summary.reduce((sum, item) => sum + item.total_issued, 0);
+  // Calculate correct totals from the inventory summary
+  const totalCurrentValue = dashboardData.inventory_summary.reduce((sum, item) => sum + item.current_value, 0);
+  const totalPurchaseValue = dashboardData.inventory_summary.reduce((sum, item) => sum + item.total_value, 0);
+  const totalCurrentStock = dashboardData.inventory_summary.reduce((sum, item) => sum + item.current_stock, 0);
+  const totalIssuedItems = dashboardData.inventory_summary.reduce((sum, item) => sum + item.total_issued, 0);
 
   return (
     <Layout title="Dashboard" subtitle="Welcome to your inventory management system">
@@ -72,20 +74,20 @@ const Dashboard = () => {
             color="blue"
           />
           <StatsCard
-            title="Current Stock"
-            value={totalStock.toLocaleString()}
-            icon={Package}
+            title="Total Purchase Value"
+            value={`$${totalPurchaseValue.toLocaleString()}`}
+            icon={ShoppingCart}
             color="green"
           />
           <StatsCard
-            title="Total Issued"
-            value={totalIssued.toLocaleString()}
+            title="Total Issues"
+            value={totalIssuedItems.toLocaleString()}
             icon={Send}
             color="yellow"
           />
           <StatsCard
-            title="Total Value"
-            value={`$${totalValue.toLocaleString()}`}
+            title="Current Stock Value"
+            value={`$${totalCurrentValue.toLocaleString()}`}
             icon={TrendingUp}
             color="green"
           />
