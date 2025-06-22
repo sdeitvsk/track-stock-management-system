@@ -43,7 +43,11 @@ const getAllMembers = async (req, res) => {
     const whereClause = { is_active };
 
     // Add filters
-    if (type) whereClause.type = type;
+    if (type) {
+      // Support comma-separated string for type (e.g., 'employee,station')
+      const typeArray = typeof type === 'string' ? type.split(',').map(t => t.trim()) : [type];
+      whereClause.type = { [Op.in]: typeArray };
+    }
     if (category) whereClause.category = category;
     if (department) whereClause.department = department;
     if (search) {
