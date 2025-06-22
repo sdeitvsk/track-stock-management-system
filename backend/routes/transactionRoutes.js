@@ -1,3 +1,4 @@
+
 const express = require('express');
 const { Transaction, Member } = require('../models');
 const { authenticate } = require('../middlewares/authMiddleware');
@@ -18,7 +19,8 @@ router.get('/', async (req, res) => {
       type, 
       member_id,
       start_date,
-      end_date 
+      end_date,
+      invoice_no 
     } = req.query;
 
     const offset = (page - 1) * limit;
@@ -27,6 +29,7 @@ router.get('/', async (req, res) => {
     // Add filters
     if (type) whereClause.type = type;
     if (member_id) whereClause.member_id = member_id;
+    if (invoice_no) whereClause.invoice_no = { [require('sequelize').Op.like]: `%${invoice_no}%` };
     if (start_date && end_date) {
       whereClause.transaction_date = {
         [require('sequelize').Op.between]: [new Date(start_date), new Date(end_date)]

@@ -1,3 +1,4 @@
+
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 
@@ -18,6 +19,14 @@ const Transaction = sequelize.define('Transaction', {
       model: 'members',
       key: 'id'
     }
+  },
+  invoice_no: {
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
+  invoice_date: {
+    type: DataTypes.DATE,
+    allowNull: true
   },
   transaction_date: {
     type: DataTypes.DATE,

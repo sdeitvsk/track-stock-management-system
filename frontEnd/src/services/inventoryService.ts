@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:3000/api';
@@ -14,6 +15,19 @@ export interface Member {
   updated_at: string;
 }
 
+export interface Transaction {
+  id: number;
+  type: 'purchase' | 'issue';
+  member_id: number;
+  invoice_no: string | null;
+  invoice_date: string | null;
+  transaction_date: string;
+  description: string | null;
+  member: Member;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Purchase {
   id: number;
   transaction_id: number;
@@ -22,13 +36,7 @@ export interface Purchase {
   rate: string; // API returns rate as string
   remaining_quantity: number;
   purchase_date: string;
-  transaction: {
-    id: number;
-    type: 'purchase';
-    member: Member;
-    transaction_date: string;
-    description: string | null;
-  };
+  transaction: Transaction;
 }
 
 export interface Issue {
@@ -39,13 +47,7 @@ export interface Issue {
   item_name: string;
   quantity: number;
   issue_date: string;
-  transaction: {
-    id: number;
-    type: 'issue';
-    member: Member;
-    transaction_date: string;
-    description: string | null;
-  };
+  transaction: Transaction;
   purchase: Purchase;
   member: Member;
 }
@@ -84,6 +86,7 @@ export interface PaginatedResponse<T> {
     purchases?: T[]; // For purchases endpoint
     members?: T[]; // For members endpoint
     issues?: T[]; // For issues endpoint
+    transactions?: T[]; // For transactions endpoint
     rows?: T[]; // Generic for other paginated responses
     pagination: {
       current_page: number;
@@ -147,6 +150,8 @@ export const inventoryService = {
     item_name: string;
     quantity: number;
     rate: number;
+    invoice_no?: string;
+    invoice_date?: string;
     description?: string;
   }): Promise<ApiResponse<Purchase>> {
     const response = await axios.post(`${API_BASE_URL}/purchases`, purchaseData);
@@ -164,6 +169,8 @@ export const inventoryService = {
     member_id: number;
     item_name: string;
     quantity: number;
+    invoice_no?: string;
+    invoice_date?: string;
     description?: string;
   }): Promise<ApiResponse<Issue>> {
     const response = await axios.post(`${API_BASE_URL}/issues`, issueData);
@@ -171,7 +178,7 @@ export const inventoryService = {
   },
 
   // Transactions
-  async getTransactions(page = 1, limit = 10, filters: any = {}): Promise<PaginatedResponse<any>> {
+  async getTransactions(page = 1, limit = 10, filters: any = {}): Promise<PaginatedResponse<Transaction>> {
     const params = { page, limit, ...filters };
     const response = await axios.get(`${API_BASE_URL}/transactions`, { params });
     return response.data;

@@ -1,3 +1,4 @@
+
 -- =====================================================
 -- Inventory Management System - Table Creation
 -- =====================================================
@@ -58,6 +59,8 @@ CREATE TABLE IF NOT EXISTS transactions (
     id INT PRIMARY KEY AUTO_INCREMENT,
     type ENUM('purchase', 'issue') NOT NULL,
     member_id INT NOT NULL,
+    invoice_no VARCHAR(50) NULL,
+    invoice_date DATE NULL,
     transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     description TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -69,6 +72,8 @@ CREATE TABLE IF NOT EXISTS transactions (
     -- Indexes
     INDEX idx_type (type),
     INDEX idx_member_id (member_id),
+    INDEX idx_invoice_no (invoice_no),
+    INDEX idx_invoice_date (invoice_date),
     INDEX idx_transaction_date (transaction_date),
     INDEX idx_type_date (type, transaction_date),
     INDEX idx_member_type (member_id, type),
