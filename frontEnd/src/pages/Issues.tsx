@@ -14,6 +14,7 @@ import {
   PaginationNext,
   PaginationPrevious
 } from '../components/ui/pagination';
+import NewIssueForm from '../components/forms/NewIssueForm';
 
 const Issues = () => {
   const [issues, setIssues] = useState<Issue[]>([]);
@@ -21,6 +22,7 @@ const Issues = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showNewIssueForm, setShowNewIssueForm] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -58,6 +60,11 @@ const Issues = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const handleNewIssueSuccess = () => {
+    setShowNewIssueForm(false);
+    fetchIssues();
+  };
+
   return (
     <Layout title="Issues" subtitle="Manage inventory issues">
       <div className="space-y-6">
@@ -74,7 +81,7 @@ const Issues = () => {
               />
             </div>
           </div>
-          <Button>
+          <Button onClick={() => setShowNewIssueForm(true)}>
             <Plus className="w-4 h-4 mr-2" />
             New Issue
           </Button>
@@ -192,6 +199,14 @@ const Issues = () => {
             </div>
           )}
         </div>
+
+        {/* New Issue Form Modal */}
+        {showNewIssueForm && (
+          <NewIssueForm
+            onClose={() => setShowNewIssueForm(false)}
+            onSuccess={handleNewIssueSuccess}
+          />
+        )}
       </div>
     </Layout>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Plus, Search, Calendar } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
@@ -14,6 +13,7 @@ import {
   PaginationNext,
   PaginationPrevious
 } from '../components/ui/pagination';
+import NewPurchaseForm from '../components/forms/NewPurchaseForm';
 
 const Purchases = () => {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -21,6 +21,7 @@ const Purchases = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showNewPurchaseForm, setShowNewPurchaseForm] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -61,6 +62,11 @@ const Purchases = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const handleNewPurchaseSuccess = () => {
+    setShowNewPurchaseForm(false);
+    fetchPurchases();
+  };
+
   return (
     <Layout title="Purchases" subtitle="Manage purchase transactions">
       <div className="space-y-6">
@@ -77,7 +83,7 @@ const Purchases = () => {
               />
             </div>
           </div>
-          <Button>
+          <Button onClick={() => setShowNewPurchaseForm(true)}>
             <Plus className="w-4 h-4 mr-2" />
             New Purchase
           </Button>
@@ -196,6 +202,14 @@ const Purchases = () => {
           )}
         </div>
       </div>
+
+      {/* New Purchase Form Modal */}
+      {showNewPurchaseForm && (
+        <NewPurchaseForm
+          onClose={() => setShowNewPurchaseForm(false)}
+          onSuccess={handleNewPurchaseSuccess}
+        />
+      )}
     </Layout>
   );
 };

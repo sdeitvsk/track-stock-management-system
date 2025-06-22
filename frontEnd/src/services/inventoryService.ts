@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:3000/api';
@@ -83,8 +82,8 @@ export interface PaginatedResponse<T> {
   success: boolean;
   data: {
     purchases?: T[]; // For purchases endpoint
-    members?: T[]; // For other endpoints  
-    issues?: T[]; // For other endpoints  
+    members?: T[]; // For members endpoint
+    issues?: T[]; // For issues endpoint
     rows?: T[]; // Generic for other paginated responses
     pagination: {
       current_page: number;
