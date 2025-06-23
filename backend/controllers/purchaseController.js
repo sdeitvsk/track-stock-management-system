@@ -5,7 +5,7 @@ const createPurchase = async (req, res) => {
   const transaction = await sequelize.transaction();
   
   try {
-    const { member_id, item_name, quantity, rate, description } = req.body;
+    const { member_id, item_name, quantity, rate, description, invoice_no, invoice_date } = req.body;
 
     // Verify member exists and is a supplier
     const member = await Member.findByPk(member_id);
@@ -17,10 +17,12 @@ const createPurchase = async (req, res) => {
       });
     }
 
-    // Create transaction record
+    // Create transaction record with invoice details
     const transactionRecord = await Transaction.create({
       type: 'purchase',
       member_id,
+      invoice_no,
+      invoice_date: invoice_date ? new Date(invoice_date) : null,
       description
     }, { transaction });
 

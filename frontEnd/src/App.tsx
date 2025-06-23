@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import Purchases from "./pages/Purchases";
+import PurchaseEntry from "./pages/PurchaseEntry";
 import Issues from "./pages/Issues";
 import Members from "./pages/Members";
 import Reports from "./pages/Reports";
@@ -40,6 +41,11 @@ const App = () => (
             <Route path="/purchases" element={
               <ProtectedRoute>
                 <Purchases />
+              </ProtectedRoute>
+            } />
+            <Route path="/purchase-entry" element={
+              <ProtectedRoute>
+                <PurchaseEntry />
               </ProtectedRoute>
             } />
             <Route path="/issues" element={
