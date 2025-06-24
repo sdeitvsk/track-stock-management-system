@@ -63,7 +63,9 @@ const Transactions = () => {
       const response = await inventoryService.getTransactions(currentPage, 10, filters);
       
       if (response.success && response.data) {
-        setTransactions(response.data.transactions || []);
+        // Handle both 'transactions' and 'rows' response formats
+        const transactionData = response.data.transactions || response.data.rows || [];
+        setTransactions(transactionData);
         setTotalPages(response.data.pagination.total_pages);
       }
     } catch (error: any) {
@@ -141,7 +143,7 @@ const Transactions = () => {
                 <SelectValue placeholder="Transaction Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="purchase">Purchase</SelectItem>
                 <SelectItem value="issue">Issue</SelectItem>
               </SelectContent>
@@ -153,7 +155,7 @@ const Transactions = () => {
                 <SelectValue placeholder="Select Member" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Members</SelectItem>
+                <SelectItem value="all">All Members</SelectItem>
                 {members.map((member) => (
                   <SelectItem key={member.id} value={member.id.toString()}>
                     {member.name} ({member.type})
