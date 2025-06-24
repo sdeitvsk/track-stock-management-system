@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Search, Calendar, Receipt, Filter, Plus, Edit } from 'lucide-react';
+import { FileText, Search, Calendar, Receipt, Filter, Plus, Edit, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout/Layout';
 import { inventoryService, Transaction, Member } from '../services/inventoryService';
@@ -115,13 +115,19 @@ const Transactions = () => {
     navigate('/purchase-entry');
   };
 
+  const handleAddIssue = () => {
+    navigate('/issue-entry');
+  };
+
   const handleEditTransaction = (transaction: Transaction) => {
     if (transaction.type === 'purchase') {
       navigate(`/purchase-entry?edit=${transaction.id}`);
+    } else if (transaction.type === 'issue') {
+      navigate(`/issue-entry?edit=${transaction.id}`);
     } else {
       toast({
         title: 'Info',
-        description: 'Only purchase transactions can be edited',
+        description: 'This transaction type cannot be edited',
         variant: 'default'
       });
     }
@@ -130,8 +136,12 @@ const Transactions = () => {
   return (
     <Layout title="Transactions" subtitle="View all purchase and issue transactions">
       <div className="space-y-6">
-        {/* Add Purchase Button */}
-        <div className="flex justify-end">
+        {/* Add Transaction Buttons */}
+        <div className="flex justify-end space-x-4">
+          <Button onClick={handleAddIssue} className="bg-blue-600 hover:bg-blue-700">
+            <Package className="w-4 h-4 mr-2" />
+            Add Issue
+          </Button>
           <Button onClick={handleAddPurchase} className="bg-green-600 hover:bg-green-700">
             <Plus className="w-4 h-4 mr-2" />
             Add Purchase
@@ -294,7 +304,6 @@ const Transactions = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleEditTransaction(transaction)}
-                          disabled={transaction.type !== 'purchase'}
                         >
                           <Edit className="w-4 h-4" />
                         </Button>

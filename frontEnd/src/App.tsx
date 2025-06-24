@@ -12,6 +12,7 @@ import Inventory from "./pages/Inventory";
 import Purchases from "./pages/Purchases";
 import PurchaseEntry from "./pages/PurchaseEntry";
 import Issues from "./pages/Issues";
+import IssueEntry from "./pages/IssueEntry";
 import Members from "./pages/Members";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
@@ -57,6 +58,11 @@ const App = () => (
             <Route path="/issues" element={
               <ProtectedRoute>
                 <Issues />
+              </ProtectedRoute>
+            } />
+            <Route path="/issue-entry" element={
+              <ProtectedRoute>
+                <IssueEntry />
               </ProtectedRoute>
             } />
             <Route path="/members" element={
