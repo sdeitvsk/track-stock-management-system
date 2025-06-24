@@ -20,6 +20,7 @@ const Sidebar = () => {
   const navigationItems = [
     { name: 'Dashboard', href: '/', icon: Home },
     { name: 'Inventory', href: '/inventory', icon: Package },
+    { name: 'Transactions', href: '/transactions', icon: Package },
     { name: 'Purchases', href: '/purchases', icon: ShoppingCart },
     { name: 'Issues', href: '/issues', icon: Send },
     { name: 'Members', href: '/members', icon: Users },
