@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:3000/api';
@@ -181,6 +180,11 @@ export const inventoryService = {
   async getTransactions(page = 1, limit = 10, filters: any = {}): Promise<PaginatedResponse<Transaction>> {
     const params = { page, limit, ...filters };
     const response = await axios.get(`${API_BASE_URL}/transactions`, { params });
+    return response.data;
+  },
+
+  async getTransactionById(id: string): Promise<ApiResponse<{ transaction: Transaction }>> {
+    const response = await axios.get(`${API_BASE_URL}/transactions/${id}`);
     return response.data;
   }
 };

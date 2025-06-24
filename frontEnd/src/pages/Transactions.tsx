@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
-import { FileText, Search, Calendar, Receipt, Filter } from 'lucide-react';
+import { FileText, Search, Calendar, Receipt, Filter, Plus, Edit } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout/Layout';
 import { inventoryService, Transaction, Member } from '../services/inventoryService';
 import { useToast } from '../hooks/use-toast';
@@ -29,6 +29,7 @@ const Transactions = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchMembers();
@@ -110,9 +111,33 @@ const Transactions = () => {
     }
   };
 
+  const handleAddPurchase = () => {
+    navigate('/purchase-entry');
+  };
+
+  const handleEditTransaction = (transaction: Transaction) => {
+    if (transaction.type === 'purchase') {
+      navigate(`/purchase-entry?edit=${transaction.id}`);
+    } else {
+      toast({
+        title: 'Info',
+        description: 'Only purchase transactions can be edited',
+        variant: 'default'
+      });
+    }
+  };
+
   return (
     <Layout title="Transactions" subtitle="View all purchase and issue transactions">
       <div className="space-y-6">
+        {/* Add Purchase Button */}
+        <div className="flex justify-end">
+          <Button onClick={handleAddPurchase} className="bg-green-600 hover:bg-green-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Purchase
+          </Button>
+        </div>
+
         {/* Filters Section */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <div className="flex items-center justify-between mb-4">
@@ -206,18 +231,21 @@ const Transactions = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                     Description
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center">
+                    <td colSpan={7} className="px-6 py-12 text-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                     </td>
                   </tr>
                 ) : transactions.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
                       No transactions found
                     </td>
                   </tr>
@@ -260,6 +288,16 @@ const Transactions = () => {
                         <div className="max-w-xs truncate">
                           {transaction.description || '-'}
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditTransaction(transaction)}
+                          disabled={transaction.type !== 'purchase'}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
                       </td>
                     </tr>
                   ))

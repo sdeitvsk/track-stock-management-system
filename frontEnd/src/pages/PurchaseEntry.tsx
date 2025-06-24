@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Save, Edit, Trash2, ShoppingCart } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout/Layout';
 import { inventoryService, Member, Purchase } from '../services/inventoryService';
 import { useToast } from '../hooks/use-toast';
@@ -19,6 +19,11 @@ interface InvoiceItem {
 }
 
 const PurchaseEntry = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const editTransactionId = searchParams.get('edit');
+  const isEditing = !!editTransactionId;
+  
   const [invoiceNo, setInvoiceNo] = useState('');
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSupplier, setSelectedSupplier] = useState('');
@@ -36,6 +41,9 @@ const PurchaseEntry = () => {
 
   useEffect(() => {
     fetchSuppliers();
+    if (isEditing) {
+      loadTransactionForEdit(editTransactionId);
+    }
   }, []);
 
   useEffect(() => {
@@ -57,6 +65,44 @@ const PurchaseEntry = () => {
         description: 'Failed to load suppliers',
         variant: 'destructive'
       });
+    }
+  };
+
+  const loadTransactionForEdit = async (transactionId: string) => {
+    try {
+      setLoading(true);
+      // Get all purchases for this transaction
+      const response = await inventoryService.getPurchases(1, 100, { transaction_id: transactionId });
+      
+      if (response.success && response.data && response.data.purchases && response.data.purchases.length > 0) {
+        const purchases = response.data.purchases;
+        const firstPurchase = purchases[0];
+        
+        // Set form data from the first purchase's transaction
+        setInvoiceNo(firstPurchase.transaction.invoice_no || '');
+        setInvoiceDate(firstPurchase.transaction.invoice_date?.split('T')[0] || new Date().toISOString().split('T')[0]);
+        setSelectedSupplier(firstPurchase.transaction.member_id.toString());
+        
+        // Convert purchases to invoice items
+        const items: InvoiceItem[] = purchases.map(purchase => ({
+          id: purchase.id,
+          item_name: purchase.item_name,
+          quantity: purchase.quantity,
+          rate: parseFloat(purchase.rate),
+          amount: purchase.quantity * parseFloat(purchase.rate)
+        }));
+        
+        setInvoiceItems(items);
+      }
+    } catch (error) {
+      console.error('Failed to load transaction for edit:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load transaction data',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -146,21 +192,12 @@ const PurchaseEntry = () => {
 
       toast({
         title: 'Success',
-        description: 'Invoice saved successfully',
+        description: isEditing ? 'Invoice updated successfully' : 'Invoice saved successfully',
         variant: 'default'
       });
 
-      // Reset form
-      setInvoiceNo('');
-      setInvoiceDate(new Date().toISOString().split('T')[0]);
-      setSelectedSupplier('');
-      setInvoiceItems([]);
-      setCurrentItem({
-        item_name: '',
-        quantity: 0,
-        rate: 0,
-        amount: 0
-      });
+      // Navigate back to transactions page after save
+      navigate('/transactions');
     } catch (error: any) {
       console.error('Failed to save invoice:', error);
       toast({
@@ -173,8 +210,15 @@ const PurchaseEntry = () => {
     }
   };
 
+  const handleCancel = () => {
+    navigate('/transactions');
+  };
+
   return (
-    <Layout title="Purchase Entry" subtitle="Create and manage purchase invoices">
+    <Layout 
+      title={isEditing ? "Edit Purchase" : "Purchase Entry"} 
+      subtitle={isEditing ? "Edit purchase invoice" : "Create and manage purchase invoices"}
+    >
       <div className="space-y-6">
         {/* Invoice Header */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -343,8 +387,11 @@ const PurchaseEntry = () => {
           </div>
         </div>
 
-        {/* Save Button */}
-        <div className="flex justify-end">
+        {/* Action Buttons */}
+        <div className="flex justify-between">
+          <Button variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
           <Button 
             onClick={saveInvoice} 
             disabled={loading || invoiceItems.length === 0}
@@ -353,12 +400,12 @@ const PurchaseEntry = () => {
             {loading ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Saving...
+                {isEditing ? 'Updating...' : 'Saving...'}
               </>
             ) : (
               <>
                 <Save className="w-4 h-4 mr-2" />
-                Save Invoice
+                {isEditing ? 'Update Invoice' : 'Save Invoice'}
               </>
             )}
           </Button>
