@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { FileText, Search, Calendar, Receipt } from 'lucide-react';
+import { FileText, Search, Calendar, Receipt, Filter } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
-import { inventoryService, Transaction } from '../services/inventoryService';
+import { inventoryService, Transaction, Member } from '../services/inventoryService';
 import { useToast } from '../hooks/use-toast';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { 
   Pagination,
   PaginationContent,
@@ -18,20 +19,47 @@ import {
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [memberFilter, setMemberFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
+    fetchMembers();
+  }, []);
+
+  useEffect(() => {
     fetchTransactions();
-  }, [currentPage, searchTerm]);
+  }, [currentPage, searchTerm, typeFilter, memberFilter, startDate, endDate]);
+
+  const fetchMembers = async () => {
+    try {
+      const response = await inventoryService.getMembers({ limit: 100 });
+      if (response.success && response.data) {
+        setMembers(response.data.members || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch members:', error);
+    }
+  };
 
   const fetchTransactions = async () => {
     try {
       setLoading(true);
-      const filters = searchTerm ? { invoice_no: searchTerm } : {};
+      const filters: any = {};
+      
+      if (searchTerm) filters.invoice_no = searchTerm;
+      if (typeFilter) filters.type = typeFilter;
+      if (memberFilter) filters.member_id = memberFilter;
+      if (startDate) filters.start_date = startDate;
+      if (endDate) filters.end_date = endDate;
+      
       const response = await inventoryService.getTransactions(currentPage, 10, filters);
       
       if (response.success && response.data) {
@@ -55,6 +83,15 @@ const Transactions = () => {
     setCurrentPage(1);
   };
 
+  const clearFilters = () => {
+    setSearchTerm('');
+    setTypeFilter('');
+    setMemberFilter('');
+    setStartDate('');
+    setEndDate('');
+    setCurrentPage(1);
+  };
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString();
@@ -74,18 +111,72 @@ const Transactions = () => {
   return (
     <Layout title="Transactions" subtitle="View all purchase and issue transactions">
       <div className="space-y-6">
-        {/* Header Actions */}
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-4">
+        {/* Filters Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-slate-900 flex items-center">
+              <Filter className="w-5 h-5 mr-2" />
+              Filters
+            </h3>
+            <Button variant="outline" onClick={clearFilters}>
+              Clear All
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Search by Invoice */}
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
               <Input
-                placeholder="Search by invoice number..."
+                placeholder="Search by invoice..."
                 value={searchTerm}
                 onChange={handleSearch}
-                className="pl-10 w-80"
+                className="pl-10"
               />
             </div>
+
+            {/* Type Filter */}
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Transaction Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="purchase">Purchase</SelectItem>
+                <SelectItem value="issue">Issue</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Member Filter */}
+            <Select value={memberFilter} onValueChange={setMemberFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Member" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Members</SelectItem>
+                {members.map((member) => (
+                  <SelectItem key={member.id} value={member.id.toString()}>
+                    {member.name} ({member.type})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Start Date */}
+            <Input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              placeholder="Start Date"
+            />
+
+            {/* End Date */}
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              placeholder="End Date"
+            />
           </div>
         </div>
 
@@ -142,7 +233,7 @@ const Transactions = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-slate-900">
                         <div>
                           <div className="font-medium">{transaction.member.name}</div>
-                          <div className="text-sm text-slate-500">{transaction.member.type}</div>
+                          <div className="text-sm text-slate-500 capitalize">{transaction.member.type}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-slate-900">

@@ -15,6 +15,7 @@ import Issues from "./pages/Issues";
 import Members from "./pages/Members";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Transactions from "./pages/Transactions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,11 @@ const App = () => (
             <Route path="/purchase-entry" element={
               <ProtectedRoute>
                 <PurchaseEntry />
+              </ProtectedRoute>
+            } />
+            <Route path="/transactions" element={
+              <ProtectedRoute>
+                <Transactions />
               </ProtectedRoute>
             } />
             <Route path="/issues" element={
