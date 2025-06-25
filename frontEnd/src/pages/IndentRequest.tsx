@@ -1,0 +1,272 @@
+
+import React, { useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Trash2, Send } from 'lucide-react';
+import Layout from '../components/Layout/Layout';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { inventoryService } from '../services/inventoryService';
+import { useToast } from '../hooks/use-toast';
+
+interface IndentItem {
+  item_name: string;
+  quantity: number;
+  remarks?: string;
+}
+
+const IndentRequest = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const [indentItems, setIndentItems] = useState<IndentItem[]>([]);
+  const [currentItem, setCurrentItem] = useState<IndentItem>({
+    item_name: '',
+    quantity: 1,
+    remarks: ''
+  });
+  const [department, setDepartment] = useState('');
+  const [purpose, setPurpose] = useState('');
+  const [priority, setPriority] = useState('normal');
+
+  // Fetch available items
+  const { data: inventoryData } = useQuery({
+    queryKey: ['inventory-summary'],
+    queryFn: () => inventoryService.getInventorySummary()
+  });
+
+  const availableItems = inventoryData?.data?.inventory_summary || [];
+
+  const addItem = () => {
+    if (!currentItem.item_name || currentItem.quantity <= 0) {
+      toast({
+        title: "Error",
+        description: "Please select an item and enter a valid quantity",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const existingItemIndex = indentItems.findIndex(item => item.item_name === currentItem.item_name);
+    
+    if (existingItemIndex >= 0) {
+      const updatedItems = [...indentItems];
+      updatedItems[existingItemIndex].quantity += currentItem.quantity;
+      setIndentItems(updatedItems);
+    } else {
+      setIndentItems([...indentItems, { ...currentItem }]);
+    }
+
+    setCurrentItem({ item_name: '', quantity: 1, remarks: '' });
+    
+    toast({
+      title: "Success",
+      description: "Item added to indent request"
+    });
+  };
+
+  const removeItem = (index: number) => {
+    setIndentItems(indentItems.filter((_, i) => i !== index));
+  };
+
+  const submitIndentRequest = () => {
+    if (indentItems.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please add at least one item to the indent request",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!department || !purpose) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Here you would typically call an API to submit the indent request
+    console.log('Submitting indent request:', {
+      department,
+      purpose,
+      priority,
+      items: indentItems
+    });
+
+    toast({
+      title: "Success",
+      description: "Indent request submitted successfully"
+    });
+
+    // Reset form
+    setIndentItems([]);
+    setDepartment('');
+    setPurpose('');
+    setPriority('normal');
+  };
+
+  return (
+    <Layout title="Indent Request" subtitle="Request items from inventory">
+      <div className="space-y-6">
+        {/* Request Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Request Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="department">Department/Station *</Label>
+                <Input
+                  id="department"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  placeholder="Enter department or station name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="purpose">Purpose *</Label>
+                <Input
+                  id="purpose"
+                  value={purpose}
+                  onChange={(e) => setPurpose(e.target.value)}
+                  placeholder="Enter purpose for the request"
+                />
+              </div>
+              <div>
+                <Label htmlFor="priority">Priority</Label>
+                <Select value={priority} onValueChange={setPriority}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Add Items */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Add Items</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+              <div>
+                <Label htmlFor="item">Item Name *</Label>
+                <Select value={currentItem.item_name} onValueChange={(value) => setCurrentItem({...currentItem, item_name: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select item" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableItems.map((item) => (
+                      <SelectItem key={item.item_name} value={item.item_name}>
+                        {item.item_name} (Stock: {item.current_stock})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="quantity">Quantity *</Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  min="1"
+                  value={currentItem.quantity}
+                  onChange={(e) => setCurrentItem({...currentItem, quantity: parseInt(e.target.value) || 1})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="remarks">Remarks</Label>
+                <Input
+                  id="remarks"
+                  value={currentItem.remarks}
+                  onChange={(e) => setCurrentItem({...currentItem, remarks: e.target.value})}
+                  placeholder="Optional remarks"
+                />
+              </div>
+              <div>
+                <Button onClick={addItem} className="w-full">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Item
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Items Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Requested Items</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Item Name</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Remarks</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {indentItems.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                      No items added yet
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  indentItems.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{item.item_name}</TableCell>
+                      <TableCell>{item.quantity}</TableCell>
+                      <TableCell>{item.remarks || '-'}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeItem(index)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        {/* Submit Button */}
+        <div className="flex justify-end space-x-4">
+          <Button variant="outline" onClick={() => navigate('/')}>
+            Cancel
+          </Button>
+          <Button onClick={submitIndentRequest} disabled={indentItems.length === 0}>
+            <Send className="w-4 h-4 mr-2" />
+            Submit Request
+          </Button>
+        </div>
+      </div>
+    </Layout>
+  );
+};
+
+export default IndentRequest;

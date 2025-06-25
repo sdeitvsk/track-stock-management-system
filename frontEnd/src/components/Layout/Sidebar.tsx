@@ -9,7 +9,9 @@ import {
   Users, 
   FileText, 
   Settings,
-  LogOut
+  LogOut,
+  ClipboardList,
+  Inbox
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -23,6 +25,8 @@ const Sidebar = () => {
     { name: 'Transactions', href: '/transactions', icon: Package },
     { name: 'Purchases', href: '/purchases', icon: ShoppingCart },
     { name: 'Issues', href: '/issues', icon: Send },
+    { name: 'Indent Request', href: '/indent-request', icon: ClipboardList },
+    { name: 'Indent Requests', href: '/indent-requests', icon: Inbox },
     { name: 'Members', href: '/members', icon: Users },
     { name: 'Reports', href: '/reports', icon: FileText },
   ];

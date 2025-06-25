@@ -13,6 +13,8 @@ import Purchases from "./pages/Purchases";
 import PurchaseEntry from "./pages/PurchaseEntry";
 import Issues from "./pages/Issues";
 import IssueEntry from "./pages/IssueEntry";
+import IndentRequest from "./pages/IndentRequest";
+import IndentRequests from "./pages/IndentRequests";
 import Members from "./pages/Members";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
@@ -63,6 +65,16 @@ const App = () => (
             <Route path="/issue-entry" element={
               <ProtectedRoute>
                 <IssueEntry />
+              </ProtectedRoute>
+            } />
+            <Route path="/indent-request" element={
+              <ProtectedRoute>
+                <IndentRequest />
+              </ProtectedRoute>
+            } />
+            <Route path="/indent-requests" element={
+              <ProtectedRoute>
+                <IndentRequests />
               </ProtectedRoute>
             } />
             <Route path="/members" element={
