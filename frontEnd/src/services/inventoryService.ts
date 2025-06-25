@@ -157,6 +157,12 @@ export const inventoryService = {
     return response.data;
   },
 
+  async searchItemNames(search = ''): Promise<ApiResponse<{ items: string[] }>> {
+    const params = search ? { search } : {};
+    const response = await axios.get(`${API_BASE_URL}/purchases/items/search`, { params });
+    return response.data;
+  },
+
   // Issues
   async getIssues(page = 1, limit = 10, filters: any = {}): Promise<PaginatedResponse<Issue>> {
     const params = { page, limit, ...filters };

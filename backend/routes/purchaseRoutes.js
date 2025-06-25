@@ -1,8 +1,10 @@
+
 const express = require('express');
 const {
   createPurchase,
   getAllPurchases,
-  getPurchaseById
+  getPurchaseById,
+  getDistinctItemNames
 } = require('../controllers/purchaseController');
 const { authenticate, authorize } = require('../middlewares/authMiddleware');
 const {
@@ -25,6 +27,11 @@ router.post('/', createPurchaseValidation, handleValidationErrors, createPurchas
 // @desc    Get all purchases with pagination and filters
 // @access  Private
 router.get('/', getAllPurchases);
+
+// @route   GET /api/purchases/items/search
+// @desc    Get distinct item names for autocomplete
+// @access  Private
+router.get('/items/search', getDistinctItemNames);
 
 // @route   GET /api/purchases/:id
 // @desc    Get purchase by ID

@@ -9,6 +9,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import ItemNameAutocomplete from '../components/forms/ItemNameAutocomplete';
 
 interface InvoiceItem {
   id?: number;
@@ -266,10 +267,9 @@ const PurchaseEntry = () => {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
             <div>
               <Label htmlFor="item-name">Item Name *</Label>
-              <Input
-                id="item-name"
+              <ItemNameAutocomplete
                 value={currentItem.item_name}
-                onChange={(e) => handleItemChange('item_name', e.target.value)}
+                onChange={(value) => handleItemChange('item_name', value)}
                 placeholder="Enter item name"
               />
             </div>

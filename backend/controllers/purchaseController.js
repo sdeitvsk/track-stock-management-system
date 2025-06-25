@@ -76,7 +76,8 @@ const getAllPurchases = async (req, res) => {
       item_name, 
       member_id,
       start_date,
-      end_date 
+      end_date,
+      transaction_id
     } = req.query;
 
     const offset = (page - 1) * limit;
@@ -84,6 +85,7 @@ const getAllPurchases = async (req, res) => {
 
     // Add filters
     if (item_name) whereClause.item_name = { [sequelize.Sequelize.Op.like]: `%${item_name}%` };
+    if (transaction_id) whereClause.transaction_id = transaction_id;
     if (start_date && end_date) {
       whereClause.purchase_date = {
         [sequelize.Sequelize.Op.between]: [new Date(start_date), new Date(end_date)]
@@ -174,8 +176,45 @@ const getPurchaseById = async (req, res) => {
   }
 };
 
+const getDistinctItemNames = async (req, res) => {
+  try {
+    const { search = '' } = req.query;
+    
+    const whereClause = {};
+    if (search) {
+      whereClause.item_name = {
+        [sequelize.Sequelize.Op.like]: `%${search}%`
+      };
+    }
+
+    const items = await Purchase.findAll({
+      attributes: [
+        [sequelize.Sequelize.fn('DISTINCT', sequelize.Sequelize.col('item_name')), 'item_name']
+      ],
+      where: whereClause,
+      order: [['item_name', 'ASC']],
+      limit: 10,
+      raw: true
+    });
+
+    const itemNames = items.map(item => item.item_name);
+
+    res.json({
+      success: true,
+      data: { items: itemNames }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching item names',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createPurchase,
   getAllPurchases,
-  getPurchaseById
+  getPurchaseById,
+  getDistinctItemNames
 };
