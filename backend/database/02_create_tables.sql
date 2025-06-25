@@ -147,3 +147,57 @@ CREATE TABLE IF NOT EXISTS issue (
     -- Full-text search index for item names
     FULLTEXT idx_item_search (item_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
+-- 6. INDENT REQUESTS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS indent_requests (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    department VARCHAR(100) NOT NULL,
+    purpose TEXT NOT NULL,
+    priority ENUM('low', 'normal', 'high', 'urgent') DEFAULT 'normal',
+    status ENUM('pending', 'approved', 'rejected', 'partial') DEFAULT 'pending',
+    requested_by VARCHAR(100) NOT NULL,
+    requested_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    approved_by VARCHAR(100) NULL,
+    approved_date TIMESTAMP NULL,
+    remarks TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- Indexes
+    INDEX idx_department (department),
+    INDEX idx_status (status),
+    INDEX idx_priority (priority),
+    INDEX idx_requested_by (requested_by),
+    INDEX idx_requested_date (requested_date),
+    INDEX idx_status_priority (status, priority),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
+-- 7. INDENT REQUEST ITEMS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS indent_request_items (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    indent_request_id INT NOT NULL,
+    item_name VARCHAR(100) NOT NULL,
+    quantity INT NOT NULL CHECK (quantity > 0),
+    approved_quantity INT DEFAULT 0 CHECK (approved_quantity >= 0),
+    remarks TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- Foreign Keys
+    FOREIGN KEY (indent_request_id) REFERENCES indent_requests(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    
+    -- Constraints
+    CHECK (approved_quantity <= quantity),
+    
+    -- Indexes
+    INDEX idx_indent_request_id (indent_request_id),
+    INDEX idx_item_name (item_name),
+    INDEX idx_quantity (quantity),
+    INDEX idx_approved_quantity (approved_quantity),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

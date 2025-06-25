@@ -11,27 +11,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { inventoryService } from '../services/inventoryService';
+import { indentRequestService, IndentRequestItem } from '../services/indentRequestService';
 import { useToast } from '../hooks/use-toast';
-
-interface IndentItem {
-  item_name: string;
-  quantity: number;
-  remarks?: string;
-}
 
 const IndentRequest = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [indentItems, setIndentItems] = useState<IndentItem[]>([]);
-  const [currentItem, setCurrentItem] = useState<IndentItem>({
+  const [indentItems, setIndentItems] = useState<IndentRequestItem[]>([]);
+  const [currentItem, setCurrentItem] = useState<IndentRequestItem>({
     item_name: '',
     quantity: 1,
     remarks: ''
   });
   const [department, setDepartment] = useState('');
   const [purpose, setPurpose] = useState('');
-  const [priority, setPriority] = useState('normal');
+  const [priority, setPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal');
 
   // Fetch available items
   const { data: inventoryData } = useQuery({
@@ -40,6 +35,32 @@ const IndentRequest = () => {
   });
 
   const availableItems = inventoryData?.data?.inventory_summary || [];
+
+  // Create indent request mutation
+  const createIndentMutation = useMutation({
+    mutationFn: indentRequestService.createIndentRequest,
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Indent request submitted successfully"
+      });
+      
+      // Reset form
+      setIndentItems([]);
+      setDepartment('');
+      setPurpose('');
+      setPriority('normal');
+      
+      navigate('/indent-requests');
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to submit indent request",
+        variant: "destructive"
+      });
+    }
+  });
 
   const addItem = () => {
     if (!currentItem.item_name || currentItem.quantity <= 0) {
@@ -92,24 +113,12 @@ const IndentRequest = () => {
       return;
     }
 
-    // Here you would typically call an API to submit the indent request
-    console.log('Submitting indent request:', {
+    createIndentMutation.mutate({
       department,
       purpose,
       priority,
       items: indentItems
     });
-
-    toast({
-      title: "Success",
-      description: "Indent request submitted successfully"
-    });
-
-    // Reset form
-    setIndentItems([]);
-    setDepartment('');
-    setPurpose('');
-    setPriority('normal');
   };
 
   return (
@@ -142,7 +151,7 @@ const IndentRequest = () => {
               </div>
               <div>
                 <Label htmlFor="priority">Priority</Label>
-                <Select value={priority} onValueChange={setPriority}>
+                <Select value={priority} onValueChange={(value: 'low' | 'normal' | 'high' | 'urgent') => setPriority(value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -259,9 +268,12 @@ const IndentRequest = () => {
           <Button variant="outline" onClick={() => navigate('/')}>
             Cancel
           </Button>
-          <Button onClick={submitIndentRequest} disabled={indentItems.length === 0}>
+          <Button 
+            onClick={submitIndentRequest} 
+            disabled={indentItems.length === 0 || createIndentMutation.isPending}
+          >
             <Send className="w-4 h-4 mr-2" />
-            Submit Request
+            {createIndentMutation.isPending ? 'Submitting...' : 'Submit Request'}
           </Button>
         </div>
       </div>

@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -15,6 +16,7 @@ const transactionRoutes = require('./routes/transactionRoutes');
 const purchaseRoutes = require('./routes/purchaseRoutes');
 const issueRoutes = require('./routes/issueRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
+const indentRequestRoutes = require('./routes/indentRequestRoutes');
 
 // Import database
 const { sequelize } = require('./config/database');
@@ -59,6 +61,7 @@ app.use('/api/transactions', transactionRoutes);
 app.use('/api/purchases', purchaseRoutes);
 app.use('/api/issues', issueRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/indent-requests', indentRequestRoutes);
 
 // Error handling middleware
 app.use(notFound);

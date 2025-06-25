@@ -1,3 +1,4 @@
+
 const { sequelize } = require('../config/database');
 
 // Import all models
@@ -6,6 +7,8 @@ const Member = require('./Member');
 const Transaction = require('./Transaction');
 const Purchase = require('./Purchase');
 const Issue = require('./Issue');
+const IndentRequest = require('./IndentRequest');
+const IndentRequestItem = require('./IndentRequestItem');
 
 // Define associations
 const defineAssociations = () => {
@@ -27,6 +30,10 @@ const defineAssociations = () => {
   // Member-Issue direct relationship
   Member.hasMany(Issue, { foreignKey: 'member_id', as: 'issues' });
   Issue.belongsTo(Member, { foreignKey: 'member_id', as: 'member' });
+
+  // Indent Request associations
+  IndentRequest.hasMany(IndentRequestItem, { foreignKey: 'indent_request_id', as: 'items' });
+  IndentRequestItem.belongsTo(IndentRequest, { foreignKey: 'indent_request_id', as: 'indentRequest' });
 };
 
 defineAssociations();
@@ -37,5 +44,7 @@ module.exports = {
   Member,
   Transaction,
   Purchase,
-  Issue
+  Issue,
+  IndentRequest,
+  IndentRequestItem
 };
