@@ -1,15 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
-import { Plus, Save, Edit, Trash2, ShoppingCart } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout/Layout';
 import { inventoryService, Member, Purchase } from '../services/inventoryService';
 import { useToast } from '../hooks/use-toast';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import ItemNameAutocomplete from '../components/forms/ItemNameAutocomplete';
+import InvoiceHeader from '../components/forms/InvoiceHeader';
+import ItemEntryForm from '../components/forms/ItemEntryForm';
+import ItemsTable from '../components/forms/ItemsTable';
+import PurchaseActions from '../components/forms/PurchaseActions';
 
 interface InvoiceItem {
   id?: number;
@@ -221,195 +219,37 @@ const PurchaseEntry = () => {
       subtitle={isEditing ? "Edit purchase invoice" : "Create and manage purchase invoices"}
     >
       <div className="space-y-6">
-        {/* Invoice Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Invoice Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="invoice-no">Invoice No. *</Label>
-              <Input
-                id="invoice-no"
-                value={invoiceNo}
-                onChange={(e) => setInvoiceNo(e.target.value)}
-                placeholder="Enter invoice number"
-              />
-            </div>
-            <div>
-              <Label htmlFor="invoice-date">Invoice Date *</Label>
-              <Input
-                id="invoice-date"
-                type="date"
-                value={invoiceDate}
-                onChange={(e) => setInvoiceDate(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="supplier">Supplier *</Label>
-              <Select value={selectedSupplier} onValueChange={setSelectedSupplier}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select supplier" />
-                </SelectTrigger>
-                <SelectContent>
-                  {suppliers.map((supplier) => (
-                    <SelectItem key={supplier.id} value={supplier.id.toString()}>
-                      {supplier.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
+        <InvoiceHeader
+          invoiceNo={invoiceNo}
+          invoiceDate={invoiceDate}
+          selectedSupplier={selectedSupplier}
+          suppliers={suppliers}
+          onInvoiceNoChange={setInvoiceNo}
+          onInvoiceDateChange={setInvoiceDate}
+          onSupplierChange={setSelectedSupplier}
+        />
 
-        {/* Item Entry */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Add Items</h3>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-            <div>
-              <Label htmlFor="item-name">Item Name *</Label>
-              <ItemNameAutocomplete
-                value={currentItem.item_name}
-                onChange={(value) => handleItemChange('item_name', value)}
-                placeholder="Enter item name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="quantity">Quantity *</Label>
-              <Input
-                id="quantity"
-                type="number"
-                min="1"
-                value={currentItem.quantity || ''}
-                onChange={(e) => handleItemChange('quantity', parseFloat(e.target.value) || 0)}
-                placeholder="0"
-              />
-            </div>
-            <div>
-              <Label htmlFor="rate">Rate *</Label>
-              <Input
-                id="rate"
-                type="number"
-                min="0"
-                step="0.01"
-                value={currentItem.rate || ''}
-                onChange={(e) => handleItemChange('rate', parseFloat(e.target.value) || 0)}
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <Label htmlFor="amount">Amount</Label>
-              <Input
-                id="amount"
-                type="number"
-                value={currentItem.amount.toFixed(2)}
-                readOnly
-                className="bg-slate-50"
-              />
-            </div>
-            <div>
-              <Button onClick={addOrUpdateItem} className="w-full">
-                {editingIndex !== null ? (
-                  <>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Update
-                  </>
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
+        <ItemEntryForm
+          currentItem={currentItem}
+          editingIndex={editingIndex}
+          onItemChange={handleItemChange}
+          onAddOrUpdateItem={addOrUpdateItem}
+        />
 
-        {/* Items Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-          <div className="p-6 border-b border-slate-200">
-            <h3 className="text-lg font-semibold text-slate-900">Invoice Items</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item Name</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Rate</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {invoiceItems.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-slate-500">
-                      No items added yet
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  invoiceItems.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{item.item_name}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
-                      <TableCell>${item.rate.toFixed(2)}</TableCell>
-                      <TableCell>${item.amount.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => editItem(index)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeItem(index)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-                {invoiceItems.length > 0 && (
-                  <TableRow className="bg-slate-50 font-medium">
-                    <TableCell colSpan={3}>Total</TableCell>
-                    <TableCell>${calculateTotal().toFixed(2)}</TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
+        <ItemsTable
+          invoiceItems={invoiceItems}
+          onEditItem={editItem}
+          onRemoveItem={removeItem}
+          calculateTotal={calculateTotal}
+        />
 
-        {/* Action Buttons */}
-        <div className="flex justify-between">
-          <Button variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={saveInvoice} 
-            disabled={loading || invoiceItems.length === 0}
-            className="px-8"
-          >
-            {loading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                {isEditing ? 'Updating...' : 'Saving...'}
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4 mr-2" />
-                {isEditing ? 'Update Invoice' : 'Save Invoice'}
-              </>
-            )}
-          </Button>
-        </div>
+        <PurchaseActions
+          isEditing={isEditing}
+          loading={loading}
+          hasItems={invoiceItems.length > 0}
+          onCancel={handleCancel}
+          onSave={saveInvoice}
+        />
       </div>
     </Layout>
   );
