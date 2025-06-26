@@ -1,3 +1,4 @@
+
 const { Issue, Transaction, Member, Purchase } = require('../models');
 const { sequelize } = require('../config/database');
 
@@ -5,7 +6,7 @@ const createIssue = async (req, res) => {
   const transaction = await sequelize.transaction();
   
   try {
-    const { member_id, item_name, quantity, description } = req.body;
+    const { member_id, items, description, invoice_no, invoice_date } = req.body;
 
     // Verify member exists
     const member = await Member.findByPk(member_id);
@@ -17,59 +18,67 @@ const createIssue = async (req, res) => {
       });
     }
 
-    // Find available purchases with FIFO logic (oldest first)
-    const availablePurchases = await Purchase.findAll({
-      where: {
-        item_name,
-        remaining_quantity: { [sequelize.Sequelize.Op.gt]: 0 }
-      },
-      order: [['purchase_date', 'ASC']],
-      transaction
-    });
-
-    // Check if enough stock is available
-    const totalAvailable = availablePurchases.reduce((sum, p) => sum + p.remaining_quantity, 0);
-    if (totalAvailable < quantity) {
-      await transaction.rollback();
-      return res.status(400).json({
-        success: false,
-        message: `Insufficient stock. Available: ${totalAvailable}, Requested: ${quantity}`
-      });
-    }
-
     // Create transaction record
     const transactionRecord = await Transaction.create({
       type: 'issue',
       member_id,
+      invoice_no,
+      invoice_date: invoice_date ? new Date(invoice_date) : null,
       description
     }, { transaction });
 
-    let remainingToIssue = quantity;
     const issueRecords = [];
 
-    // Process FIFO logic
-    for (const purchase of availablePurchases) {
-      if (remainingToIssue <= 0) break;
+    // Process each item
+    for (const item of items) {
+      const { item_name, quantity } = item;
 
-      const quantityToIssue = Math.min(remainingToIssue, purchase.remaining_quantity);
+      // Find available purchases with FIFO logic (oldest first)
+      const availablePurchases = await Purchase.findAll({
+        where: {
+          item_name,
+          remaining_quantity: { [sequelize.Sequelize.Op.gt]: 0 }
+        },
+        order: [['purchase_date', 'ASC']],
+        transaction
+      });
 
-      // Create issue record
-      const issue = await Issue.create({
-        transaction_id: transactionRecord.id,
-        member_id,
-        purchase_id: purchase.id,
-        item_name,
-        quantity: quantityToIssue
-      }, { transaction });
+      // Check if enough stock is available
+      const totalAvailable = availablePurchases.reduce((sum, p) => sum + p.remaining_quantity, 0);
+      if (totalAvailable < quantity) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for ${item_name}. Available: ${totalAvailable}, Requested: ${quantity}`
+        });
+      }
 
-      issueRecords.push(issue);
+      let remainingToIssue = quantity;
 
-      // Update purchase remaining quantity
-      await purchase.update({
-        remaining_quantity: purchase.remaining_quantity - quantityToIssue
-      }, { transaction });
+      // Process FIFO logic for this item
+      for (const purchase of availablePurchases) {
+        if (remainingToIssue <= 0) break;
 
-      remainingToIssue -= quantityToIssue;
+        const quantityToIssue = Math.min(remainingToIssue, purchase.remaining_quantity);
+
+        // Create issue record
+        const issue = await Issue.create({
+          transaction_id: transactionRecord.id,
+          member_id,
+          purchase_id: purchase.id,
+          item_name,
+          quantity: quantityToIssue
+        }, { transaction });
+
+        issueRecords.push(issue);
+
+        // Update purchase remaining quantity
+        await purchase.update({
+          remaining_quantity: purchase.remaining_quantity - quantityToIssue
+        }, { transaction });
+
+        remainingToIssue -= quantityToIssue;
+      }
     }
 
     await transaction.commit();
@@ -104,7 +113,7 @@ const createIssue = async (req, res) => {
       message: 'Issue created successfully',
       data: { 
         issues: completeIssues,
-        total_quantity: quantity
+        transaction_id: transactionRecord.id
       }
     });
   } catch (error) {

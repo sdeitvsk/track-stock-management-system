@@ -166,16 +166,18 @@ const IssueEntry = () => {
 
     setLoading(true);
     try {
-      for (const item of issueItems) {
-        await inventoryService.createIssue({
-          member_id: parseInt(selectedMember),
-          item_name: item.item_name,
-          quantity: item.quantity,
-          invoice_no: invoiceNo,
-          invoice_date: invoiceDate,
-          description: description || `Issue: ${invoiceNo || 'Direct Issue'}`
-        });
-      }
+      const items = issueItems.map(item => ({
+        item_name: item.item_name,
+        quantity: item.quantity
+      }));
+
+      await inventoryService.createIssue({
+        member_id: parseInt(selectedMember),
+        items,
+        invoice_no: invoiceNo,
+        invoice_date: invoiceDate,
+        description: description || `Issue: ${invoiceNo || 'Direct Issue'}`
+      });
 
       toast({
         title: 'Success',

@@ -176,18 +176,19 @@ const PurchaseEntry = () => {
 
     setLoading(true);
     try {
-      // Save each item as a separate purchase
-      for (const item of invoiceItems) {
-        await inventoryService.createPurchase({
-          member_id: parseInt(selectedSupplier),
-          item_name: item.item_name,
-          quantity: item.quantity,
-          rate: item.rate,
-          invoice_no: invoiceNo,
-          invoice_date: invoiceDate,
-          description: `Invoice: ${invoiceNo}`
-        });
-      }
+      const items = invoiceItems.map(item => ({
+        item_name: item.item_name,
+        quantity: item.quantity,
+        rate: item.rate
+      }));
+
+      await inventoryService.createPurchase({
+        member_id: parseInt(selectedSupplier),
+        items,
+        invoice_no: invoiceNo,
+        invoice_date: invoiceDate,
+        description: `Invoice: ${invoiceNo}`
+      });
 
       toast({
         title: 'Success',
@@ -195,7 +196,6 @@ const PurchaseEntry = () => {
         variant: 'default'
       });
 
-      // Navigate back to transactions page after save
       navigate('/transactions');
     } catch (error: any) {
       console.error('Failed to save invoice:', error);

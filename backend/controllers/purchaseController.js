@@ -1,3 +1,4 @@
+
 const { Purchase, Transaction, Member } = require('../models');
 const { sequelize } = require('../config/database');
 
@@ -5,7 +6,7 @@ const createPurchase = async (req, res) => {
   const transaction = await sequelize.transaction();
   
   try {
-    const { member_id, item_name, quantity, rate, description, invoice_no, invoice_date } = req.body;
+    const { member_id, items, description, invoice_no, invoice_date } = req.body;
 
     // Verify member exists and is a supplier
     const member = await Member.findByPk(member_id);
@@ -26,19 +27,28 @@ const createPurchase = async (req, res) => {
       description
     }, { transaction });
 
-    // Create purchase record
-    const purchase = await Purchase.create({
-      transaction_id: transactionRecord.id,
-      item_name,
-      quantity,
-      rate,
-      remaining_quantity: quantity
-    }, { transaction });
+    const purchaseRecords = [];
+
+    // Create purchase records for each item
+    for (const item of items) {
+      const { item_name, quantity, rate } = item;
+      
+      const purchase = await Purchase.create({
+        transaction_id: transactionRecord.id,
+        item_name,
+        quantity,
+        rate,
+        remaining_quantity: quantity
+      }, { transaction });
+
+      purchaseRecords.push(purchase);
+    }
 
     await transaction.commit();
 
     // Fetch complete purchase data with associations
-    const completePurchase = await Purchase.findByPk(purchase.id, {
+    const completePurchases = await Purchase.findAll({
+      where: { transaction_id: transactionRecord.id },
       include: [
         {
           model: Transaction,
@@ -56,7 +66,10 @@ const createPurchase = async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Purchase created successfully',
-      data: { purchase: completePurchase }
+      data: { 
+        purchases: completePurchases,
+        transaction_id: transactionRecord.id
+      }
     });
   } catch (error) {
     await transaction.rollback();

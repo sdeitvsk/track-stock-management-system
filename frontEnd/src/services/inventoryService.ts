@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:3000/api';
@@ -146,13 +147,15 @@ export const inventoryService = {
 
   async createPurchase(purchaseData: {
     member_id: number;
-    item_name: string;
-    quantity: number;
-    rate: number;
+    items: Array<{
+      item_name: string;
+      quantity: number;
+      rate: number;
+    }>;
     invoice_no?: string;
     invoice_date?: string;
     description?: string;
-  }): Promise<ApiResponse<Purchase>> {
+  }): Promise<ApiResponse<{ purchases: Purchase[]; transaction_id: number }>> {
     const response = await axios.post(`${API_BASE_URL}/purchases`, purchaseData);
     return response.data;
   },
@@ -172,12 +175,14 @@ export const inventoryService = {
 
   async createIssue(issueData: {
     member_id: number;
-    item_name: string;
-    quantity: number;
+    items: Array<{
+      item_name: string;
+      quantity: number;
+    }>;
     invoice_no?: string;
     invoice_date?: string;
     description?: string;
-  }): Promise<ApiResponse<Issue>> {
+  }): Promise<ApiResponse<{ issues: Issue[]; transaction_id: number }>> {
     const response = await axios.post(`${API_BASE_URL}/issues`, issueData);
     return response.data;
   },
