@@ -1,5 +1,6 @@
+
 const jwt = require('jsonwebtoken');
-const { LoginUser } = require('../models');
+const { LoginUser, Member } = require('../models');
 
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
@@ -9,7 +10,7 @@ const generateToken = (userId) => {
 
 const register = async (req, res) => {
   try {
-    const { username, password, role = 'staff' } = req.body;
+    const { username, password, role = 'staff', member_id } = req.body;
 
     // Check if user already exists
     const existingUser = await LoginUser.findOne({ where: { username } });
@@ -20,10 +21,22 @@ const register = async (req, res) => {
       });
     }
 
+    // If member_id is provided, validate it
+    if (member_id) {
+      const member = await Member.findByPk(member_id);
+      if (!member) {
+        return res.status(400).json({
+          success: false,
+          message: 'Member not found'
+        });
+      }
+    }
+
     // Create new user
     const user = await LoginUser.create({
       username,
       password_hash: password, // Will be hashed by the model hook
+      member_id: member_id || null,
       role
     });
 
@@ -37,6 +50,7 @@ const register = async (req, res) => {
         user: {
           id: user.id,
           username: user.username,
+          member_id: user.member_id,
           role: user.role
         },
         token
@@ -53,15 +67,21 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-       
     const { username, password } = req.body;
 
-    // Find user by username
+    // Find user by username with member details
     const user = await LoginUser.findOne({ 
       where: { 
         username,
         is_active: true
-      }
+      },
+      include: [
+        {
+          model: Member,
+          as: 'member',
+          attributes: ['id', 'name', 'type', 'department']
+        }
+      ]
     });
 
     if (!user) {
@@ -95,8 +115,10 @@ const login = async (req, res) => {
         user: {
           id: user.id,
           username: user.username,
+          member_id: user.member_id,
           role: user.role,
-          last_login: user.last_login
+          last_login: user.last_login,
+          member: user.member
         },
         token
       }
@@ -112,13 +134,31 @@ const login = async (req, res) => {
 
 const getProfile = async (req, res) => {
   try {
-    const rows = await LoginUser.findByPk(req.user.id, {
-      attributes: ['id', 'username', 'role', 'is_active', 'last_login', 'created_at']
+    const user = await LoginUser.findByPk(req.user.id, {
+      attributes: ['id', 'username', 'member_id', 'role', 'is_active', 'last_login', 'created_at'],
+      include: [
+        {
+          model: Member,
+          as: 'member',
+          attributes: ['id', 'name', 'type', 'department']
+        }
+      ]
     });
 
     res.json({
       success: true,
-      data: { rows }
+      data: { 
+        user: {
+          id: user.id,
+          username: user.username,
+          member_id: user.member_id,
+          role: user.role,
+          is_active: user.is_active,
+          last_login: user.last_login,
+          created_at: user.created_at,
+          member: user.member
+        }
+      }
     });
   } catch (error) {
     res.status(500).json({

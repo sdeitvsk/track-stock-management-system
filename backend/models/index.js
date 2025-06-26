@@ -12,6 +12,10 @@ const IndentRequestItem = require('./IndentRequestItem');
 
 // Define associations
 const defineAssociations = () => {
+  // LoginUser-Member association
+  LoginUser.belongsTo(Member, { foreignKey: 'member_id', as: 'member' });
+  Member.hasOne(LoginUser, { foreignKey: 'member_id', as: 'loginUser' });
+
   // Member associations
   Member.hasMany(Transaction, { foreignKey: 'member_id', as: 'transactions' });
   Transaction.belongsTo(Member, { foreignKey: 'member_id', as: 'member' });

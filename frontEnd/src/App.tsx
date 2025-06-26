@@ -19,6 +19,7 @@ import Members from "./pages/Members";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Transactions from "./pages/Transactions";
+import LoginUsers from "./pages/LoginUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -90,6 +91,11 @@ const App = () => (
             <Route path="/settings" element={
               <ProtectedRoute adminOnly>
                 <Settings />
+              </ProtectedRoute>
+            } />
+            <Route path="/login-users" element={
+              <ProtectedRoute adminOnly>
+                <LoginUsers />
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />

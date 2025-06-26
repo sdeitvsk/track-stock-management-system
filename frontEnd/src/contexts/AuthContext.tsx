@@ -5,10 +5,17 @@ import authService from '../services/authService';
 interface User {
   id: number;
   username: string;
+  member_id: number | null;
   role: 'admin' | 'staff';
   is_active: boolean;
   last_login: string | null;
   created_at: string;
+  member?: {
+    id: number;
+    name: string;
+    type: string;
+    department: string | null;
+  };
 }
 
 interface AuthContextType {

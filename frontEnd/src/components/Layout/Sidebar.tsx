@@ -12,7 +12,8 @@ import {
   LogOut,
   ClipboardList,
   Inbox,
-  Sparkles
+  Sparkles,
+  UserPlus
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -29,6 +30,7 @@ const Sidebar = () => {
       { name: 'Indent Request', href: '/indent-request', icon: ClipboardList, color: 'text-orange-400' },
       { name: 'Requested Indents', href: '/indent-requests', icon: Inbox, color: 'text-pink-400' },
       { name: 'Members', href: '/members', icon: Users, color: 'text-cyan-400' },
+      { name: 'Login Users', href: '/login-users', icon: UserPlus, color: 'text-emerald-400' },
       { name: 'Reports', href: '/reports', icon: FileText, color: 'text-indigo-400' },
     ];
 

@@ -1,3 +1,4 @@
+
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 const bcrypt = require('bcryptjs');
@@ -20,6 +21,14 @@ const LoginUser = sequelize.define('LoginUser', {
   password_hash: {
     type: DataTypes.STRING(255),
     allowNull: false
+  },
+  member_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'members',
+      key: 'id'
+    }
   },
   role: {
     type: DataTypes.ENUM('admin', 'staff'),
