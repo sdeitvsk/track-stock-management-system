@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Plus, Edit } from 'lucide-react';
 import { Label } from '../ui/label';
@@ -16,7 +15,7 @@ interface IssueItem {
 interface IssueItemEntryFormProps {
   currentItem: IssueItem;
   editingIndex: number | null;
-  onItemChange: (field: keyof IssueItem, value: string | number) => void;
+  onItemChange: (field: keyof IssueItem, value: string | number | { purchase_id: string; item_name: string }) => void;
   onAddOrUpdateItem: () => void;
 }
 
@@ -34,7 +33,7 @@ const IssueItemEntryForm: React.FC<IssueItemEntryFormProps> = ({
           <Label htmlFor="item-name">Item Name *</Label>
           <PurchaseItemSelect
             value={currentItem.purchase_id}
-            onChange={(value) => onItemChange('purchase_id', value)}
+            onChange={(val) => onItemChange('purchase_id', val)}
             placeholder="Select available item"
           />
         </div>

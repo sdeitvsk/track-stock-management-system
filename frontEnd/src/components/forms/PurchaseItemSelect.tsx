@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -28,7 +27,7 @@ interface PurchaseItem {
 
 interface PurchaseItemSelectProps {
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: { purchase_id: string; item_name: string }) => void;
   placeholder?: string;
 }
 
@@ -106,7 +105,7 @@ const PurchaseItemSelect: React.FC<PurchaseItemSelectProps> = ({
                   key={item.id}
                   value={`${item.item_name}-${item.id}`}
                   onSelect={() => {
-                    onChange(item.id.toString());
+                    onChange({ purchase_id: item.id.toString(), item_name: item.item_name });
                     setOpen(false);
                   }}
                 >

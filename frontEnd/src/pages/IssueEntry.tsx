@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout/Layout';
@@ -95,11 +94,19 @@ const IssueEntry = () => {
     }
   };
 
-  const handleItemChange = (field: keyof IssueItem, value: string | number) => {
-    setCurrentItem(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleItemChange = (field: keyof IssueItem, value: string | number | { purchase_id: string; item_name: string }) => {
+    if (field === 'purchase_id' && typeof value === 'object' && value !== null) {
+      setCurrentItem(prev => ({
+        ...prev,
+        purchase_id: value.purchase_id,
+        item_name: value.item_name
+      }));
+    } else {
+      setCurrentItem(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
   };
 
   const addOrUpdateItem = () => {
@@ -118,6 +125,8 @@ const IssueEntry = () => {
       setIssueItems(updatedItems);
       setEditingIndex(null);
     } else {
+      console.log('Adding new item:', currentItem);
+      
       setIssueItems(prev => [...prev, { ...currentItem }]);
     }
 
