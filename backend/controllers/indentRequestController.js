@@ -1,4 +1,5 @@
-const { IndentRequest, IndentRequestItem } = require('../models');
+
+const { IndentRequest, IndentRequestItem, Member } = require('../models');
 const { Op } = require('sequelize');
 
 // Create a new indent request
@@ -16,8 +17,21 @@ const createIndentRequest = async (req, res) => {
       });
     }
 
+    // Find the member record for the requesting user
+    const member = await Member.findOne({ 
+      where: { name: requested_by } 
+    });
+
+    if (!member) {
+      return res.status(400).json({
+        success: false,
+        message: 'Member profile not found for the requesting user'
+      });
+    }
+
     // Create the main indent request
     const indentRequest = await IndentRequest.create({
+      member_id: member.id,
       department,
       purpose,
       priority,
@@ -58,7 +72,7 @@ const createIndentRequest = async (req, res) => {
   }
 };
 
-// Get all indent requests with filtering
+// Get all indent requests with filtering and role-based access
 const getIndentRequests = async (req, res) => {
   try {
     const { 
@@ -71,6 +85,32 @@ const getIndentRequests = async (req, res) => {
     } = req.query;
 
     const where = {};
+    
+    // Role-based filtering: non-admins can only see their own requests
+    if (req.user.role !== 'admin') {
+      // Find the member record for the current user
+      const member = await Member.findOne({ 
+        where: { name: req.user.username } 
+      });
+      
+      if (member) {
+        where.member_id = member.id;
+      } else {
+        // If no member record found, return empty result
+        return res.json({
+          success: true,
+          data: {
+            indent_requests: [],
+            pagination: {
+              total: 0,
+              page: parseInt(page),
+              limit: parseInt(limit),
+              pages: 0
+            }
+          }
+        });
+      }
+    }
     
     if (status && status !== 'all') {
       where.status = status;
@@ -96,10 +136,17 @@ const getIndentRequests = async (req, res) => {
 
     const { count, rows } = await IndentRequest.findAndCountAll({
       where,
-      include: [{
-        model: IndentRequestItem,
-        as: 'items'
-      }],
+      include: [
+        {
+          model: IndentRequestItem,
+          as: 'items'
+        },
+        {
+          model: Member,
+          as: 'member',
+          attributes: ['id', 'name', 'department']
+        }
+      ],
       order: [['created_at', 'DESC']],
       limit: parseInt(limit),
       offset: parseInt(offset)
@@ -133,11 +180,37 @@ const getIndentRequestById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const indentRequest = await IndentRequest.findByPk(id, {
-      include: [{
-        model: IndentRequestItem,
-        as: 'items'
-      }]
+    const where = { id };
+    
+    // Role-based filtering: non-admins can only see their own requests
+    if (req.user.role !== 'admin') {
+      const member = await Member.findOne({ 
+        where: { name: req.user.username } 
+      });
+      
+      if (member) {
+        where.member_id = member.id;
+      } else {
+        return res.status(404).json({
+          success: false,
+          message: 'Indent request not found'
+        });
+      }
+    }
+
+    const indentRequest = await IndentRequest.findOne({
+      where,
+      include: [
+        {
+          model: IndentRequestItem,
+          as: 'items'
+        },
+        {
+          model: Member,
+          as: 'member',
+          attributes: ['id', 'name', 'department']
+        }
+      ]
     });
 
     if (!indentRequest) {
@@ -199,10 +272,17 @@ const updateIndentRequestStatus = async (req, res) => {
 
     // Fetch updated request
     const updatedRequest = await IndentRequest.findByPk(id, {
-      include: [{
-        model: IndentRequestItem,
-        as: 'items'
-      }]
+      include: [
+        {
+          model: IndentRequestItem,
+          as: 'items'
+        },
+        {
+          model: Member,
+          as: 'member',
+          attributes: ['id', 'name', 'department']
+        }
+      ]
     });
 
     res.json({

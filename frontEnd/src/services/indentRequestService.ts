@@ -16,6 +16,7 @@ export interface CreateIndentRequestPayload {
 
 export interface IndentRequest {
   id: number;
+  member_id: number;
   department: string;
   purpose: string;
   priority: 'low' | 'normal' | 'high' | 'urgent';
@@ -26,6 +27,11 @@ export interface IndentRequest {
   approved_date?: string;
   remarks?: string;
   items: IndentRequestItem[];
+  member?: {
+    id: number;
+    name: string;
+    department: string;
+  };
 }
 
 export interface IndentRequestFilters {

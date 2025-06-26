@@ -8,6 +8,14 @@ const IndentRequest = sequelize.define('IndentRequest', {
     primaryKey: true,
     autoIncrement: true
   },
+  member_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'members',
+      key: 'id'
+    }
+  },
   department: {
     type: DataTypes.STRING(100),
     allowNull: false,
@@ -62,6 +70,9 @@ const IndentRequest = sequelize.define('IndentRequest', {
   updatedAt: 'updated_at',
   indexes: [
     {
+      fields: ['member_id']
+    },
+    {
       fields: ['department']
     },
     {
@@ -78,6 +89,9 @@ const IndentRequest = sequelize.define('IndentRequest', {
     },
     {
       fields: ['status', 'priority']
+    },
+    {
+      fields: ['member_id', 'status']
     }
   ]
 });

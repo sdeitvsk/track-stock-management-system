@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Eye, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import { Button } from '../components/ui/button';
@@ -10,87 +10,59 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
-
-interface IndentRequestItem {
-  item_name: string;
-  quantity: number;
-  remarks?: string;
-}
-
-interface IndentRequestType {
-  id: number;
-  department: string;
-  purpose: string;
-  priority: 'low' | 'normal' | 'high' | 'urgent';
-  status: 'pending' | 'approved' | 'rejected' | 'partial';
-  requested_date: string;
-  requested_by: string;
-  items: IndentRequestItem[];
-  total_items: number;
-}
-
-// Mock data - in real app, this would come from API
-const mockIndentRequests: IndentRequestType[] = [
-  {
-    id: 1,
-    department: 'Engineering',
-    purpose: 'Equipment maintenance',
-    priority: 'high',
-    status: 'pending',
-    requested_date: '2024-01-15',
-    requested_by: 'John Doe',
-    items: [
-      { item_name: 'Screwdriver Set', quantity: 2, remarks: 'For motor repair' },
-      { item_name: 'Electrical Wire', quantity: 10, remarks: 'For wiring work' }
-    ],
-    total_items: 2
-  },
-  {
-    id: 2,
-    department: 'Production',
-    purpose: 'Production line setup',
-    priority: 'urgent',
-    status: 'approved',
-    requested_date: '2024-01-14',
-    requested_by: 'Jane Smith',
-    items: [
-      { item_name: 'Safety Gloves', quantity: 50, remarks: 'For workers' },
-      { item_name: 'Safety Helmets', quantity: 25, remarks: 'New batch required' }
-    ],
-    total_items: 2
-  },
-  {
-    id: 3,
-    department: 'Maintenance',
-    purpose: 'Routine maintenance',
-    priority: 'normal',
-    status: 'partial',
-    requested_date: '2024-01-13',
-    requested_by: 'Mike Johnson',
-    items: [
-      { item_name: 'Lubricant Oil', quantity: 5, remarks: 'For machinery' }
-    ],
-    total_items: 1
-  }
-];
+import { useToast } from '../components/ui/use-toast';
+import { indentRequestService, IndentRequest } from '../services/indentRequestService';
+import { useAuth } from '../contexts/AuthContext';
 
 const IndentRequests = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRequest, setSelectedRequest] = useState<IndentRequestType | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<IndentRequest | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  const { toast } = useToast();
+  const { isAdmin } = useAuth();
+  const queryClient = useQueryClient();
 
-  // Filter requests based on search and filters
-  const filteredRequests = mockIndentRequests.filter(request => {
-    const matchesSearch = request.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.purpose.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.requested_by.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
-    const matchesPriority = priorityFilter === 'all' || request.priority === priorityFilter;
-    
-    return matchesSearch && matchesStatus && matchesPriority;
+  // Fetch indent requests with filters
+  const { data: requestsData, isLoading, error } = useQuery({
+    queryKey: ['indentRequests', statusFilter, priorityFilter, searchTerm, currentPage],
+    queryFn: () => indentRequestService.getIndentRequests({
+      status: statusFilter !== 'all' ? statusFilter : undefined,
+      priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+      search: searchTerm || undefined,
+      page: currentPage,
+      limit: 10
+    })
   });
+
+  // Update status mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status, remarks }: { id: number; status: string; remarks?: string }) =>
+      indentRequestService.updateIndentRequestStatus(id, { 
+        status: status as 'approved' | 'rejected' | 'partial',
+        remarks 
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['indentRequests'] });
+      toast({
+        title: "Success",
+        description: "Request status updated successfully",
+      });
+      setSelectedRequest(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update request status",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const indentRequests = requestsData?.data?.indent_requests || [];
+  const pagination = requestsData?.data?.pagination;
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -127,12 +99,36 @@ const IndentRequests = () => {
   };
 
   const handleStatusUpdate = (requestId: number, newStatus: string) => {
-    // Here you would typically call an API to update the status
-    console.log(`Updating request ${requestId} to status: ${newStatus}`);
+    updateStatusMutation.mutate({ id: requestId, status: newStatus });
   };
 
+  if (isLoading) {
+    return (
+      <Layout title="Indent Requests" subtitle="Loading requests...">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout title="Indent Requests" subtitle="Error loading requests">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Failed to load indent requests</p>
+            <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['indentRequests'] })}>
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
-    <Layout title="Indent Requests" subtitle="Manage and process indent requests">
+    <Layout title="Indent Requests" subtitle={isAdmin ? "Manage and process all indent requests" : "View your indent requests"}>
       <div className="space-y-6">
         {/* Filters */}
         <Card>
@@ -183,7 +179,10 @@ const IndentRequests = () => {
         {/* Requests Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Indent Requests ({filteredRequests.length})</CardTitle>
+            <CardTitle>
+              {isAdmin ? 'All Indent Requests' : 'Your Indent Requests'} 
+              ({pagination?.total || 0})
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -201,21 +200,21 @@ const IndentRequests = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRequests.length === 0 ? (
+                {indentRequests.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-gray-500">
                       No indent requests found
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredRequests.map((request) => (
+                  indentRequests.map((request: IndentRequest) => (
                     <TableRow key={request.id}>
                       <TableCell className="font-medium">#{request.id}</TableCell>
                       <TableCell>{request.department}</TableCell>
                       <TableCell>{request.purpose}</TableCell>
                       <TableCell>{getPriorityBadge(request.priority)}</TableCell>
                       <TableCell>{getStatusBadge(request.status)}</TableCell>
-                      <TableCell>{request.total_items} items</TableCell>
+                      <TableCell>{request.items?.length || 0} items</TableCell>
                       <TableCell>{new Date(request.requested_date).toLocaleDateString()}</TableCell>
                       <TableCell>{request.requested_by}</TableCell>
                       <TableCell>
@@ -268,7 +267,7 @@ const IndentRequests = () => {
                                         </TableRow>
                                       </TableHeader>
                                       <TableBody>
-                                        {selectedRequest.items.map((item, index) => (
+                                        {selectedRequest.items?.map((item, index) => (
                                           <TableRow key={index}>
                                             <TableCell>{item.item_name}</TableCell>
                                             <TableCell>{item.quantity}</TableCell>
@@ -279,11 +278,12 @@ const IndentRequests = () => {
                                     </Table>
                                   </div>
                                   
-                                  {selectedRequest.status === 'pending' && (
+                                  {isAdmin && selectedRequest.status === 'pending' && (
                                     <div className="flex space-x-2 pt-4">
                                       <Button 
                                         onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')}
                                         className="bg-green-600 hover:bg-green-700"
+                                        disabled={updateStatusMutation.isPending}
                                       >
                                         <CheckCircle className="w-4 h-4 mr-2" />
                                         Approve
@@ -291,6 +291,7 @@ const IndentRequests = () => {
                                       <Button
                                         onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')}
                                         variant="destructive"
+                                        disabled={updateStatusMutation.isPending}
                                       >
                                         <XCircle className="w-4 h-4 mr-2" />
                                         Reject
@@ -308,6 +309,33 @@ const IndentRequests = () => {
                 )}
               </TableBody>
             </Table>
+
+            {/* Pagination */}
+            {pagination && pagination.pages > 1 && (
+              <div className="flex justify-between items-center mt-4">
+                <div className="text-sm text-gray-600">
+                  Showing {((currentPage - 1) * pagination.limit) + 1} to {Math.min(currentPage * pagination.limit, pagination.total)} of {pagination.total} entries
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(pagination.pages, p + 1))}
+                    disabled={currentPage === pagination.pages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -153,6 +153,7 @@ CREATE TABLE IF NOT EXISTS issue (
 -- =====================================================
 CREATE TABLE IF NOT EXISTS indent_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
+    member_id INT NOT NULL,
     department VARCHAR(100) NOT NULL,
     purpose TEXT NOT NULL,
     priority ENUM('low', 'normal', 'high', 'urgent') DEFAULT 'normal',
@@ -165,13 +166,18 @@ CREATE TABLE IF NOT EXISTS indent_requests (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
+    -- Foreign Keys
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    
     -- Indexes
+    INDEX idx_member_id (member_id),
     INDEX idx_department (department),
     INDEX idx_status (status),
     INDEX idx_priority (priority),
     INDEX idx_requested_by (requested_by),
     INDEX idx_requested_date (requested_date),
     INDEX idx_status_priority (status, priority),
+    INDEX idx_member_status (member_id, status),
     INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

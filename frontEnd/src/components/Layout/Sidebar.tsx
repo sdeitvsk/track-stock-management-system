@@ -19,17 +19,27 @@ const Sidebar = () => {
   const location = useLocation();
   const { user, logout, isAdmin } = useAuth();
 
-  const navigationItems = [
-    { name: 'Dashboard', href: '/', icon: Home },
-    { name: 'Inventory', href: '/inventory', icon: Package },
-    { name: 'Transactions', href: '/transactions', icon: Package },
-    // { name: 'Purchases', href: '/purchases', icon: ShoppingCart },
-    // { name: 'Issues', href: '/issues', icon: Send },
-    { name: 'Indent Request', href: '/indent-request', icon: ClipboardList },
-    { name: 'Requested Indents', href: '/indent-requests', icon: Inbox },
-    { name: 'Members', href: '/members', icon: Users },
-    { name: 'Reports', href: '/reports', icon: FileText },
-  ];
+  // Define navigation items based on user role
+  const getNavigationItems = () => {
+    const adminItems = [
+      { name: 'Dashboard', href: '/', icon: Home },
+      { name: 'Inventory', href: '/inventory', icon: Package },
+      { name: 'Transactions', href: '/transactions', icon: Package },
+      { name: 'Indent Request', href: '/indent-request', icon: ClipboardList },
+      { name: 'Requested Indents', href: '/indent-requests', icon: Inbox },
+      { name: 'Members', href: '/members', icon: Users },
+      { name: 'Reports', href: '/reports', icon: FileText },
+    ];
+
+    const staffItems = [
+      { name: 'Indent Request', href: '/indent-request', icon: ClipboardList },
+      { name: 'Requested Indents', href: '/indent-requests', icon: Inbox },
+    ];
+
+    return isAdmin ? adminItems : staffItems;
+  };
+
+  const navigationItems = getNavigationItems();
 
   const isActive = (href: string) => {
     return location.pathname === href;
