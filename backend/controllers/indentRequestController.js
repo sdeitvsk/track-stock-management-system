@@ -1,9 +1,9 @@
-
 const { IndentRequest, IndentRequestItem } = require('../models');
 const { Op } = require('sequelize');
 
 // Create a new indent request
 const createIndentRequest = async (req, res) => {
+  
   try {
     const { department, purpose, priority = 'normal', items } = req.body;
     const requested_by = req.user.username;

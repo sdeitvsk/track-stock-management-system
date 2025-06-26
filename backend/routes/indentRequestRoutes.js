@@ -1,7 +1,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { requireAuth, requireAdmin } = require('../middlewares/authMiddleware');
+const { authenticate, authorize } = require('../middlewares/authMiddleware');
 const {
   createIndentRequest,
   getIndentRequests,
@@ -11,18 +11,18 @@ const {
 } = require('../controllers/indentRequestController');
 
 // Create a new indent request
-router.post('/', requireAuth, createIndentRequest);
+router.post('/', authenticate, createIndentRequest);
 
 // Get all indent requests (with filtering)
-router.get('/', requireAuth, getIndentRequests);
+router.get('/', authenticate, getIndentRequests);
 
 // Get specific indent request by ID
-router.get('/:id', requireAuth, getIndentRequestById);
+router.get('/:id', authenticate, getIndentRequestById);
 
 // Update indent request status (admin only)
-router.patch('/:id/status', requireAuth, requireAdmin, updateIndentRequestStatus);
+router.patch('/:id/status', authenticate, authorize('admin'), updateIndentRequestStatus);
 
 // Delete indent request (admin only, only pending requests)
-router.delete('/:id', requireAuth, requireAdmin, deleteIndentRequest);
+router.delete('/:id', authenticate, authorize('admin'), deleteIndentRequest);
 
 module.exports = router;
