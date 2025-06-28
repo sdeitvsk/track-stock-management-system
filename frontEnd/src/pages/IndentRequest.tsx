@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Send } from 'lucide-react';
@@ -27,6 +27,7 @@ const IndentRequest = () => {
   const [department, setDepartment] = useState('');
   const [purpose, setPurpose] = useState('');
   const [priority, setPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal');
+  const [stationDepartments, setStationDepartments] = useState<string[]>([]);
 
   // Fetch available items
   const { data: inventoryData } = useQuery({
@@ -35,6 +36,21 @@ const IndentRequest = () => {
   });
 
   const availableItems = inventoryData?.data?.inventory_summary || [];
+
+  // Fetch stations
+  const { data: stationsData, isLoading: isLoadingStations, error: stationsError } = useQuery({
+    queryKey: ['stations'],
+    queryFn: () => inventoryService.getMembers({ type: 'station', limit: 1000 }), // Assuming a large limit to get all stations
+    onSuccess: (data) => {
+      if (data.success && data.data?.members) {
+        const departments = data.data.members
+          .map(member => member.department)
+          .filter((dept): dept is string => !!dept) // Filter out null or undefined departments
+          .sort((a, b) => a.localeCompare(b)); // Sort alphabetically
+        setStationDepartments(departments);
+      }
+    }
+  });
 
   // Create indent request mutation
   const createIndentMutation = useMutation({
@@ -133,12 +149,26 @@ const IndentRequest = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="department">Department/Station *</Label>
-                <Input
-                  id="department"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  placeholder="Enter department or station name"
-                />
+                <Select value={department} onValueChange={(value) => setDepartment(value)} disabled={isLoadingStations || !!stationsError}>
+                  <SelectTrigger id="department">
+                    <SelectValue placeholder={isLoadingStations ? "Loading stations..." : stationsError ? "Error loading stations" : "Select department/station"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {stationsError ? (
+                      <SelectItem value="error" disabled>Error loading stations</SelectItem>
+                    ) : isLoadingStations ? (
+                      <SelectItem value="loading" disabled>Loading...</SelectItem>
+                    ) : stationDepartments.length > 0 ? (
+                      stationDepartments.map((dept) => (
+                        <SelectItem key={dept} value={dept}>
+                          {dept}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-stations" disabled>No stations found</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="purpose">Purpose *</Label>
