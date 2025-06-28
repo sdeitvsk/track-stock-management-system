@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import authService from '../services/authService';
 
@@ -46,13 +45,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const ensureUserShape = (user: any): User => ({
+    id: user.id,
+    username: user.username,
+    member_id: user.member_id ?? null,
+    role: user.role,
+    is_active: user.is_active,
+    last_login: user.last_login ?? null,
+    created_at: user.created_at,
+    member: user.member ? {
+      id: user.member.id,
+      name: user.member.name,
+      type: user.member.type,
+      department: user.member.department ?? null,
+    } : undefined,
+  });
+
   useEffect(() => {
     const initAuth = async () => {
       const currentUser = authService.getCurrentUser();
       if (currentUser && authService.isAuthenticated()) {
         try {
           const response = await authService.getProfile();
-          setUser(response.data.user);
+          setUser(ensureUserShape(response.data.user));
         } catch (error) {
           console.error('Failed to fetch profile:', error);
           authService.logout();
@@ -67,7 +82,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (username: string, password: string) => {
     try {
       const response = await authService.login({ username, password });
-      setUser(response.data.user);
+      setUser(ensureUserShape(response.data.user));
     } catch (error) {
       throw error;
     }
@@ -76,7 +91,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (username: string, password: string, role: 'admin' | 'staff' = 'staff') => {
     try {
       const response = await authService.register({ username, password, role });
-      setUser(response.data.user);
+      setUser(ensureUserShape(response.data.user));
     } catch (error) {
       throw error;
     }
