@@ -183,7 +183,7 @@ const IndentRequest = () => {
                   <SelectContent>
                     {availableItems.map((item) => (
                       <SelectItem key={item.item_name} value={item.item_name}>
-                        {item.item_name} (Stock: {item.current_stock})
+                        {item.item_name} 
                       </SelectItem>
                     ))}
                   </SelectContent>

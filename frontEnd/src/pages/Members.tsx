@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Search, Building, Phone, Edit, Trash2 } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
@@ -29,6 +28,7 @@ const Members = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<string>('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [deletingMember, setDeletingMember] = useState<Member | null>(null);
@@ -37,12 +37,14 @@ const Members = () => {
 
   useEffect(() => {
     fetchMembers();
-  }, [searchTerm]);
+  }, [searchTerm, filterType]);
 
   const fetchMembers = async () => {
     try {
       setLoading(true);
-      const filters = searchTerm ? { search: searchTerm } : {};
+      const filters: any = {};
+      if (searchTerm) filters.search = searchTerm;
+      if (filterType) filters.type = filterType;
       const response = await inventoryService.getMembers(filters);
       
       if (response.success && response.data) {
@@ -62,6 +64,10 @@ const Members = () => {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+  };
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilterType(e.target.value);
   };
 
   const handleAddMember = () => {
@@ -183,6 +189,17 @@ const Members = () => {
                 className="pl-10 w-80"
               />
             </div>
+            <select
+              value={filterType}
+              onChange={handleFilterChange}
+              className="ml-2 px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 bg-white"
+              style={{ minWidth: 120 }}
+            >
+              <option value="">All Types</option>
+              <option value="employee">Employee</option>
+              <option value="supplier">Supplier</option>
+              <option value="station">Station</option>
+            </select>
           </div>
           <Button onClick={handleAddMember}>
             <Plus className="w-4 h-4 mr-2" />

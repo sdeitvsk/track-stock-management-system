@@ -2,71 +2,41 @@
 const { Purchase, Transaction, Member } = require('../models');
 const { sequelize } = require('../config/database');
 
-const createPurchase = async (req, res) => {
+const savePurchase = async (req, res) => {
   const transaction = await sequelize.transaction();
-  
-  try {
-    const { member_id, items, description, invoice_no, invoice_date } = req.body;
 
-    // Verify member exists and is a supplier
-    const member = await Member.findByPk(member_id);
-    if (!member || member.type !== 'supplier') {
+  try {
+    const { member_id, items, description, invoice_no, invoice_date, transaction_id } = req.body;
+
+    const member = await validateSupplier(member_id);
+    if (!member) {
       await transaction.rollback();
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid supplier member'
-      });
+      return res.status(400).json({ success: false, message: 'Invalid supplier member' });
     }
 
-    // Create transaction record with invoice details
-    const transactionRecord = await Transaction.create({
-      type: 'purchase',
+    const transactionRecord = await handleTransactionUpsert({
+      transaction_id,
       member_id,
       invoice_no,
-      invoice_date: invoice_date ? new Date(invoice_date) : null,
-      description
-    }, { transaction });
+      invoice_date,
+      description,
+      dbTransaction: transaction
+    });
 
-    const purchaseRecords = [];
-
-    // Create purchase records for each item
-    for (const item of items) {
-      const { item_name, quantity, rate } = item;
-      
-      const purchase = await Purchase.create({
-        transaction_id: transactionRecord.id,
-        item_name,
-        quantity,
-        rate,
-        remaining_quantity: quantity
-      }, { transaction });
-
-      purchaseRecords.push(purchase);
-    }
+    await syncPurchaseItems({
+      items,
+      transaction_id: transactionRecord.id,
+      dbTransaction: transaction
+    });
 
     await transaction.commit();
 
-    // Fetch complete purchase data with associations
-    const completePurchases = await Purchase.findAll({
-      where: { transaction_id: transactionRecord.id },
-      include: [
-        {
-          model: Transaction,
-          as: 'transaction',
-          include: [
-            {
-              model: Member,
-              as: 'member'
-            }
-          ]
-        }
-      ]
-    });
+    const completePurchases = await fetchCompletePurchases(transactionRecord.id);
 
-    res.status(201).json({
+    res.status(transaction_id ? 200 : 201).json({
       success: true,
-      message: 'Purchase created successfully',
-      data: { 
+      message: transaction_id ? 'Purchase updated successfully' : 'Purchase created successfully',
+      data: {
         purchases: completePurchases,
         transaction_id: transactionRecord.id
       }
@@ -75,11 +45,95 @@ const createPurchase = async (req, res) => {
     await transaction.rollback();
     res.status(500).json({
       success: false,
-      message: 'Error creating purchase',
+      message: 'Error saving purchase',
       error: error.message
     });
   }
 };
+
+// ✅ Validates the member as a supplier
+async function validateSupplier(member_id) {
+  const member = await Member.findByPk(member_id);
+  if (!member || member.type !== 'supplier') return null;
+  return member;
+}
+
+// ✅ Creates or updates the transaction
+async function handleTransactionUpsert({ transaction_id, member_id, invoice_no, invoice_date, description, dbTransaction }) {
+  if (transaction_id) {
+    const transactionRecord = await Transaction.findByPk(transaction_id);
+    if (!transactionRecord) throw new Error('Transaction not found');
+
+    await transactionRecord.update({
+      member_id,
+      invoice_no,
+      invoice_date: invoice_date ? new Date(invoice_date) : null,
+      description
+    }, { transaction: dbTransaction });
+
+    return transactionRecord;
+  }
+
+  return await Transaction.create({
+    type: 'purchase',
+    member_id,
+    invoice_no,
+    invoice_date: invoice_date ? new Date(invoice_date) : null,
+    description
+  }, { transaction: dbTransaction });
+}
+
+// ✅ Syncs purchase items: add, update, delete
+async function syncPurchaseItems({ items, transaction_id, dbTransaction }) {
+  const existingPurchases = await Purchase.findAll({
+    where: { transaction_id },
+    transaction: dbTransaction
+  });
+
+  const incomingIds = items.filter(i => i.id).map(i => i.id);
+  const existingIds = existingPurchases.map(p => p.id);
+
+  const toDelete = existingIds.filter(id => !incomingIds.includes(id));
+  if (toDelete.length) {
+    await Purchase.destroy({ where: { id: toDelete }, transaction: dbTransaction });
+  }
+
+  for (const item of items) {
+    const { id, item_name, quantity, rate } = item;
+
+    if (id) {
+      await Purchase.update({
+        item_name,
+        quantity,
+        rate,
+        remaining_quantity: quantity // Adjust as needed for stock tracking
+      }, {
+        where: { id },
+        transaction: dbTransaction
+      });
+    } else {
+      await Purchase.create({
+        transaction_id,
+        item_name,
+        quantity,
+        rate,
+        remaining_quantity: quantity
+      }, { transaction: dbTransaction });
+    }
+  }
+}
+
+// ✅ Fetches purchase with transaction & member details
+async function fetchCompletePurchases(transaction_id) {
+  return await Purchase.findAll({
+    where: { transaction_id },
+    include: [{
+      model: Transaction,
+      as: 'transaction',
+      include: [{ model: Member, as: 'member' }]
+    }]
+  });
+}
 
 const getAllPurchases = async (req, res) => {
   try {
@@ -226,7 +280,7 @@ const getDistinctItemNames = async (req, res) => {
 };
 
 module.exports = {
-  createPurchase,
+  savePurchase,
   getAllPurchases,
   getPurchaseById,
   getDistinctItemNames

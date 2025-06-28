@@ -183,6 +183,7 @@ const PurchaseEntry = () => {
       }));
 
       await inventoryService.createPurchase({
+        transaction_id: isEditing ? parseInt(editTransactionId!) : undefined,
         member_id: parseInt(selectedSupplier),
         items,
         invoice_no: invoiceNo,

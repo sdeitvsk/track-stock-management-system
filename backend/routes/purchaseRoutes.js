@@ -1,7 +1,7 @@
 
 const express = require('express');
 const {
-  createPurchase,
+  savePurchase,
   getAllPurchases,
   getPurchaseById,
   getDistinctItemNames
@@ -21,7 +21,7 @@ router.use(authenticate);
 // @route   POST /api/purchases
 // @desc    Create new purchase
 // @access  Private
-router.post('/', createPurchaseValidation, handleValidationErrors, createPurchase);
+router.post('/',  handleValidationErrors, savePurchase);
 
 // @route   GET /api/purchases
 // @desc    Get all purchases with pagination and filters

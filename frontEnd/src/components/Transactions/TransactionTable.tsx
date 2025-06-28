@@ -38,9 +38,9 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'purchase':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-300';
       case 'issue':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-red-300';
       default:
         return 'bg-slate-100 text-slate-800';
     }

@@ -146,6 +146,7 @@ export const inventoryService = {
   },
 
   async createPurchase(purchaseData: {
+    transaction_id?: number; // Optional for new purchases
     member_id: number;
     items: Array<{
       item_name: string;
@@ -174,6 +175,7 @@ export const inventoryService = {
   },
 
   async createIssue(issueData: {
+    transaction_id?: number; // Optional for new issues
     member_id: number;
     items: Array<{
       item_name: string;

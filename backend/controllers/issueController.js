@@ -2,116 +2,52 @@
 const { Issue, Transaction, Member, Purchase } = require('../models');
 const { sequelize } = require('../config/database');
 
-const createIssue = async (req, res) => {
+const createOrUpdateIssue = async (req, res) => {
   const transaction = await sequelize.transaction();
-  
-  try {
-    const { member_id, items, description, invoice_no, invoice_date } = req.body;
 
-    // Verify member exists
-    const member = await Member.findByPk(member_id);
+  try {
+    const { transaction_id, member_id, items, description, invoice_no, invoice_date } = req.body;
+
+    // 1. Validate member
+    const member = await validateMember(member_id);
     if (!member) {
       await transaction.rollback();
-      return res.status(400).json({
-        success: false,
-        message: 'Member not found'
-      });
+      return res.status(400).json({ success: false, message: 'Member not found' });
     }
 
-    // Create transaction record
-    const transactionRecord = await Transaction.create({
-      type: 'issue',
+    // 2. Handle transaction creation or update
+    const transactionRecord = await upsertIssueTransaction({
+      transaction_id,
       member_id,
       invoice_no,
-      invoice_date: invoice_date ? new Date(invoice_date) : null,
-      description
-    }, { transaction });
-
-    const issueRecords = [];
-
-    // Process each item
-    for (const item of items) {
-      const { item_name, quantity } = item;
-
-      // Find available purchases with FIFO logic (oldest first)
-      const availablePurchases = await Purchase.findAll({
-        where: {
-          item_name,
-          remaining_quantity: { [sequelize.Sequelize.Op.gt]: 0 }
-        },
-        order: [['purchase_date', 'ASC']],
-        transaction
-      });
-
-      // Check if enough stock is available
-      const totalAvailable = availablePurchases.reduce((sum, p) => sum + p.remaining_quantity, 0);
-      if (totalAvailable < quantity) {
-        await transaction.rollback();
-        return res.status(400).json({
-          success: false,
-          message: `Insufficient stock for ${item_name}. Available: ${totalAvailable}, Requested: ${quantity}`
-        });
-      }
-
-      let remainingToIssue = quantity;
-
-      // Process FIFO logic for this item
-      for (const purchase of availablePurchases) {
-        if (remainingToIssue <= 0) break;
-
-        const quantityToIssue = Math.min(remainingToIssue, purchase.remaining_quantity);
-
-        // Create issue record
-        const issue = await Issue.create({
-          transaction_id: transactionRecord.id,
-          member_id,
-          purchase_id: purchase.id,
-          item_name,
-          quantity: quantityToIssue
-        }, { transaction });
-
-        issueRecords.push(issue);
-
-        // Update purchase remaining quantity
-        await purchase.update({
-          remaining_quantity: purchase.remaining_quantity - quantityToIssue
-        }, { transaction });
-
-        remainingToIssue -= quantityToIssue;
-      }
-    }
-
-    await transaction.commit();
-
-    // Fetch complete issue data with associations
-    const completeIssues = await Issue.findAll({
-      where: { transaction_id: transactionRecord.id },
-      include: [
-        {
-          model: Transaction,
-          as: 'transaction',
-          include: [
-            {
-              model: Member,
-              as: 'member'
-            }
-          ]
-        },
-        {
-          model: Purchase,
-          as: 'purchase'
-        },
-        {
-          model: Member,
-          as: 'member'
-        }
-      ]
+      invoice_date,
+      description,
+      dbTransaction: transaction
     });
 
-    res.status(201).json({
+    // 3. If editing, revert previous issues and delete them
+    if (transaction_id) {
+      await revertPreviousIssues(transaction_id, transaction);
+    }
+
+    // 4. Create new issue items using FIFO logic
+    const issueRecords = await processIssueItems({
+      items,
+      transaction_id: transactionRecord.id,
+      member_id,
+      dbTransaction: transaction
+    });
+
+    // 5. Commit DB changes
+    await transaction.commit();
+
+    // 6. Fetch complete issue details
+    const completeIssues = await fetchCompleteIssues(transactionRecord.id);
+
+    res.status(transaction_id ? 200 : 201).json({
       success: true,
-      message: 'Issue created successfully',
-      data: { 
+      message: transaction_id ? 'Issue updated successfully' : 'Issue created successfully',
+      data: {
         issues: completeIssues,
         transaction_id: transactionRecord.id
       }
@@ -120,11 +56,127 @@ const createIssue = async (req, res) => {
     await transaction.rollback();
     res.status(500).json({
       success: false,
-      message: 'Error creating issue',
+      message: 'Error processing issue',
       error: error.message
     });
   }
 };
+
+async function validateMember(member_id) {
+  return await Member.findByPk(member_id);
+}
+
+async function upsertIssueTransaction({ transaction_id, member_id, invoice_no, invoice_date, description, dbTransaction }) {
+  if (transaction_id) {
+    const transactionRecord = await Transaction.findByPk(transaction_id);
+    if (!transactionRecord) throw new Error('Transaction not found');
+
+    await transactionRecord.update({
+      member_id,
+      invoice_no,
+      invoice_date: invoice_date ? new Date(invoice_date) : null,
+      description
+    }, { transaction: dbTransaction });
+
+    return transactionRecord;
+  }
+
+  return await Transaction.create({
+    type: 'issue',
+    member_id,
+    invoice_no,
+    invoice_date: invoice_date ? new Date(invoice_date) : null,
+    description
+  }, { transaction: dbTransaction });
+}
+
+async function revertPreviousIssues(transaction_id, dbTransaction) {
+  const previousIssues = await Issue.findAll({
+    where: { transaction_id },
+    transaction: dbTransaction
+  });
+
+  for (const issue of previousIssues) {
+    // Restore remaining_quantity in associated purchase
+    const purchase = await Purchase.findByPk(issue.purchase_id, { transaction: dbTransaction });
+    if (purchase) {
+      await purchase.update({
+        remaining_quantity: purchase.remaining_quantity + issue.quantity
+      }, { transaction: dbTransaction });
+    }
+  }
+
+  await Issue.destroy({
+    where: { transaction_id },
+    transaction: dbTransaction
+  });
+}
+
+async function processIssueItems({ items, transaction_id, member_id, dbTransaction }) {
+  const issueRecords = [];
+
+  for (const item of items) {
+    const { item_name, quantity } = item;
+
+    const availablePurchases = await Purchase.findAll({
+      where: {
+        item_name,
+        remaining_quantity: { [sequelize.Sequelize.Op.gt]: 0 }
+      },
+      order: [['purchase_date', 'ASC']],
+      transaction: dbTransaction
+    });
+
+    const totalAvailable = availablePurchases.reduce((sum, p) => sum + p.remaining_quantity, 0);
+    if (totalAvailable < quantity) {
+      throw new Error(`Insufficient stock for ${item_name}. Available: ${totalAvailable}, Requested: ${quantity}`);
+    }
+
+    let remainingToIssue = quantity;
+
+    for (const purchase of availablePurchases) {
+      if (remainingToIssue <= 0) break;
+
+      const quantityToIssue = Math.min(remainingToIssue, purchase.remaining_quantity);
+
+      const issue = await Issue.create({
+        transaction_id,
+        member_id,
+        purchase_id: purchase.id,
+        item_name,
+        quantity: quantityToIssue
+      }, { transaction: dbTransaction });
+
+      issueRecords.push(issue);
+
+      await purchase.update({
+        remaining_quantity: purchase.remaining_quantity - quantityToIssue
+      }, { transaction: dbTransaction });
+
+      remainingToIssue -= quantityToIssue;
+    }
+  }
+
+  return issueRecords;
+}
+
+async function fetchCompleteIssues(transaction_id) {
+  return await Issue.findAll({
+    where: { transaction_id },
+    include: [
+      {
+        model: Transaction,
+        as: 'transaction',
+        include: [{ model: Member, as: 'member' }]
+      },
+      { model: Purchase, as: 'purchase' },
+      { model: Member, as: 'member' }
+    ]
+  });
+}
+
+
+// Function to get all issues with pagination and filters
 
 const getAllIssues = async (req, res) => {
   try {
@@ -133,6 +185,7 @@ const getAllIssues = async (req, res) => {
       limit = 10, 
       item_name, 
       member_id,
+       transaction_id,
       start_date,
       end_date 
     } = req.query;
@@ -142,6 +195,7 @@ const getAllIssues = async (req, res) => {
 
     // Add filters
     if (item_name) whereClause.item_name = { [sequelize.Sequelize.Op.like]: `%${item_name}%` };
+    if (transaction_id) whereClause.transaction_id = transaction_id;
     if (member_id) whereClause.member_id = member_id;
     if (start_date && end_date) {
       whereClause.issue_date = {
@@ -245,7 +299,7 @@ const getIssueById = async (req, res) => {
 };
 
 module.exports = {
-  createIssue,
+  createIssue: createOrUpdateIssue ,
   getAllIssues,
   getIssueById
 };

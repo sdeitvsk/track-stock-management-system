@@ -172,6 +172,7 @@ const IssueEntry = () => {
       }));
 
       await inventoryService.createIssue({
+        transaction_id: isEditing ? parseInt(editTransactionId!) : undefined,       
         member_id: parseInt(selectedMember),
         items,
         invoice_no: invoiceNo,
