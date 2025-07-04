@@ -232,8 +232,47 @@ const getTransactionSummary = async (req, res) => {
   }
 };
 
+const getStockCombo = async (req, res) => {
+  try {
+    // Get value summary for purchases
+    const valueQuery = `
+      WITH ranked_purchases AS (
+        SELECT 
+            id, 
+            item_name, 
+            remaining_quantity,
+            MIN(purchase_date) OVER (PARTITION BY item_name) AS dt,
+            ROW_NUMBER() OVER (PARTITION BY item_name ORDER BY purchase_date) AS r
+        FROM 
+            inventory_management.purchase
+        WHERE 
+            remaining_quantity > 0
+    )
+    SELECT *
+    FROM ranked_purchases
+    WHERE r = 1;
+    `;
+
+    const [valueSummary] = await sequelize.query(valueQuery);
+
+    res.json({
+      success: true,
+      data: {
+        stock_combo: valueSummary,
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error creating stock combo',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getInventorySummary,
   getItemHistory,
-  getTransactionSummary
+  getTransactionSummary,
+  getStockCombo
 };

@@ -5,6 +5,7 @@ export interface IndentRequestItem {
   item_name: string;
   quantity: number;
   remarks?: string;
+  purchase_id?: number; // Optional, used for linking to existing purchases 
 }
 
 export interface CreateIndentRequestPayload {

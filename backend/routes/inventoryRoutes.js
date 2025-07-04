@@ -2,7 +2,8 @@ const express = require('express');
 const {
   getInventorySummary,
   getItemHistory,
-  getTransactionSummary
+  getTransactionSummary,
+  getStockCombo
 } = require('../controllers/inventoryController');
 const { authenticate } = require('../middlewares/authMiddleware');
 
@@ -25,5 +26,10 @@ router.get('/item/:item_name/history', getItemHistory);
 // @desc    Get transaction summary by date and type
 // @access  Private
 router.get('/transactions/summary', getTransactionSummary);
+
+// @route   GET /api/inventory/stock-combo
+// @desc    Get stock combo details
+// @access  Private
+router.get('/stock-combo', getStockCombo);
 
 module.exports = router;

@@ -22,7 +22,8 @@ const IndentRequest = () => {
   const [currentItem, setCurrentItem] = useState<IndentRequestItem>({
     item_name: '',
     quantity: 1,
-    remarks: ''
+    remarks: '',
+    purchase_id: undefined // Optional, used for linking to existing purchases
   });
   const [department, setDepartment] = useState('');
   const [purpose, setPurpose] = useState('');
@@ -32,10 +33,12 @@ const IndentRequest = () => {
   // Fetch available items
   const { data: inventoryData } = useQuery({
     queryKey: ['inventory-summary'],
-    queryFn: () => inventoryService.getInventorySummary()
+    queryFn: () => inventoryService.getStockCombo()
   });
 
-  const availableItems = inventoryData?.data?.inventory_summary || [];
+  const availableItems = (inventoryData?.data?.stock_combo) || [];
+
+  console.log("Available Items:", availableItems);
 
   // Fetch stations
   const { data: stationsData, isLoading: isLoadingStations, error: stationsError } = useQuery({
@@ -206,18 +209,31 @@ const IndentRequest = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
               <div>
                 <Label htmlFor="item">Item Name *</Label>
-                <Select value={currentItem.item_name} onValueChange={(value) => setCurrentItem({...currentItem, item_name: value})}>
+                <Select
+                  value={currentItem.purchase_id?.toString()}
+                  onValueChange={(value) => {
+                    const selectedItem = availableItems.find(item => item.id.toString() === value);
+                    if (selectedItem) {
+                      setCurrentItem({
+                        ...currentItem,
+                        item_name: selectedItem.item_name,
+                        purchase_id: selectedItem.id,
+                      });
+                    }
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select item" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableItems.map((item) => (
-                      <SelectItem key={item.item_name} value={item.item_name}>
-                        {item.item_name} 
+                      <SelectItem key={item.id} value={item.id.toString()}>
+                        {item.item_name} ({item.remaining_quantity} left)
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+
               </div>
               <div>
                 <Label htmlFor="quantity">Quantity *</Label>

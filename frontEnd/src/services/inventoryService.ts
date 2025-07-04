@@ -52,6 +52,22 @@ export interface Issue {
   member: Member;
 }
 
+
+// Represents a single stock item
+export interface StockComboItem {
+  id: number;
+  item_name: string;
+  remaining_quantity: number;
+  dt: string; // ISO datetime string, e.g., "2025-06-28T13:58:14"
+  r: number;
+}
+
+// Represents the API response data for stock-combo
+export interface StockCombo {
+  stock_combo: StockComboItem[];
+}
+
+
 export interface InventoryItem {
   item_name: string;
   total_purchased: number;
@@ -114,6 +130,11 @@ export const inventoryService = {
   async getInventorySummary(itemName = ''): Promise<ApiResponse<InventorySummary>> {
     const params = itemName ? { item_name: itemName } : {};
     const response = await axios.get(`${API_BASE_URL}/inventory/summary`, { params });
+    return response.data;
+  },
+
+  async getStockCombo(): Promise<ApiResponse<StockCombo>> {
+    const response = await axios.get(`${API_BASE_URL}/inventory/stock-combo`);
     return response.data;
   },
 

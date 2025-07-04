@@ -43,7 +43,8 @@ const createIndentRequest = async (req, res) => {
       indent_request_id: indentRequest.id,
       item_name: item.item_name,
       quantity: item.quantity,
-      remarks: item.remarks
+      remarks: item.remarks,
+      purchase_id: item.purchase_id || null // Optional field
     }));
 
     await IndentRequestItem.bulkCreate(itemsWithRequestId);
