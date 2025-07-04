@@ -1,6 +1,6 @@
-
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
+const Member = require('./Member'); // Adjust the path as necessary
 
 const IndentRequest = sequelize.define('IndentRequest', {
   id: {
@@ -95,5 +95,7 @@ const IndentRequest = sequelize.define('IndentRequest', {
     }
   ]
 });
+
+IndentRequest.belongsTo(Member, { foreignKey: 'member_id', as: 'member' });
 
 module.exports = IndentRequest;

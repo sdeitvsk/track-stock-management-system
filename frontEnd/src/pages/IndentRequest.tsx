@@ -43,17 +43,18 @@ const IndentRequest = () => {
   // Fetch stations
   const { data: stationsData, isLoading: isLoadingStations, error: stationsError } = useQuery({
     queryKey: ['stations'],
-    queryFn: () => inventoryService.getMembers({ type: 'station', limit: 1000 }), // Assuming a large limit to get all stations
-    onSuccess: (data) => {
-      if (data.success && data.data?.members) {
-        const departments = data.data.members
-          .map(member => member.department)
-          .filter((dept): dept is string => !!dept) // Filter out null or undefined departments
-          .sort((a, b) => a.localeCompare(b)); // Sort alphabetically
-        setStationDepartments(departments);
-      }
-    }
+    queryFn: () => inventoryService.getMembers({ type: 'station', limit: 1000 }) // Assuming a large limit to get all stations
   });
+
+  useEffect(() => {
+    if (stationsData && stationsData.success && stationsData.data?.members) {
+      const departments = stationsData.data.members
+        .map(member => member.department)
+        .filter((dept): dept is string => !!dept) // Filter out null or undefined departments
+        .sort((a, b) => a.localeCompare(b)); // Sort alphabetically
+      setStationDepartments(departments);
+    }
+  }, [stationsData]);
 
   // Create indent request mutation
   const createIndentMutation = useMutation({
