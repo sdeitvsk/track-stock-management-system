@@ -2,6 +2,7 @@
 import React from 'react';
 import { Bell, Search, Sparkles } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { SidebarTrigger } from '../ui/sidebar';
 
 interface HeaderProps {
   title: string;
@@ -14,14 +15,17 @@ const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
   return (
     <header className="bg-white/80 backdrop-blur-md border-b border-purple-200/50 px-6 py-4 shadow-lg">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
-            <Sparkles className="w-8 h-8 text-purple-500" />
-            {title}
-          </h1>
-          {subtitle && (
-            <p className="text-purple-600/70 mt-1 font-medium">{subtitle}</p>
-          )}
+        <div className="flex items-center gap-4">
+          <SidebarTrigger className="h-8 w-8 text-purple-600 hover:text-purple-800 hover:bg-purple-100 rounded-lg transition-colors" />
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
+              <Sparkles className="w-8 h-8 text-purple-500" />
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="text-purple-600/70 mt-1 font-medium">{subtitle}</p>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center space-x-4">
