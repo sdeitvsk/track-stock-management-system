@@ -13,7 +13,8 @@ import {
   ClipboardList,
   Inbox,
   Sparkles,
-  UserPlus
+  UserPlus,
+  BarChart3
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -32,6 +33,7 @@ const Sidebar = () => {
       { name: 'Members', href: '/members', icon: Users, color: 'text-cyan-400' },
       { name: 'Login Users', href: '/login-users', icon: UserPlus, color: 'text-emerald-400' },
       { name: 'Reports', href: '/reports', icon: FileText, color: 'text-indigo-400' },
+      { name: 'Advanced Reports', href: '/advanced-reports', icon: BarChart3, color: 'text-red-400' },
     ];
 
     const staffItems = [
