@@ -102,6 +102,17 @@ const IndentRequests = () => {
     updateStatusMutation.mutate({ id: requestId, status: newStatus });
   };
 
+  const handleItemChange = (index: number, key: string, value: any) => {
+  setSelectedRequest((prev) => {
+    if (!prev) return prev;
+    const updatedItems = prev.items.map((itm, idx) =>
+      idx === index ? { ...itm, [key]: value } : itm
+    );
+    return { ...prev, items: updatedItems };
+  });
+};
+
+
   if (isLoading) {
     return (
       <Layout title="Indent Requests" subtitle="Loading requests...">
@@ -229,7 +240,7 @@ const IndentRequests = () => {
                                 <Eye className="w-4 h-4" />
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
+                            <DialogContent className="max-w-3xl bg-slate-200">
                               <DialogHeader>
                                 <DialogTitle>Request Details - #{request.id}</DialogTitle>
                               </DialogHeader>
@@ -263,6 +274,7 @@ const IndentRequests = () => {
                                         <TableRow>
                                           <TableHead>Item Name</TableHead>
                                           <TableHead>Quantity</TableHead>
+                                          <TableHead>Approved Qty</TableHead>
                                           <TableHead>Remarks</TableHead>
                                         </TableRow>
                                       </TableHeader>
@@ -271,7 +283,38 @@ const IndentRequests = () => {
                                           <TableRow key={index}>
                                             <TableCell>{item.item_name}</TableCell>
                                             <TableCell>{item.quantity}</TableCell>
-                                            <TableCell>{item.remarks || '-'}</TableCell>
+                                            {isAdmin ? (
+                                              <>
+                                                <TableCell>
+                                                  <Input
+                                                    type="number"
+                                                    min={0}
+                                                    value={item.approved_quantity ?? item.quantity}
+                                                    onChange={(e) =>
+                                                      handleItemChange(index, 'approved_quantity', Number(e.target.value))
+                                                    }
+                                                    className="w-24"
+                                                  />
+                                                </TableCell>
+                                                <TableCell>
+                                                  <Input
+                                                    value={item.remarks || ''}
+                                                    onChange={(e) => handleItemChange(index, 'remarks', e.target.value)}
+                                                    className="w-32"
+                                                  />
+                                                </TableCell>
+                                              </>
+                                            ) : (
+                                              <>
+                                                <TableCell>
+                                                  <span>{item.approved_quantity ?? item.quantity}</span>
+                                                </TableCell>
+                                                <TableCell>
+                                                  <span>{item.remarks || '-'}</span>
+                                                </TableCell>
+                                              </>
+                                            )}
+
                                           </TableRow>
                                         ))}
                                       </TableBody>

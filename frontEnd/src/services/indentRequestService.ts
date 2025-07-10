@@ -5,6 +5,7 @@ export interface IndentRequestItem {
   item_name: string;
   quantity: number;
   remarks?: string;
+  approved_quantity?: number; // Optional, used for approved requests
   purchase_id?: number; // Optional, used for linking to existing purchases 
 }
 

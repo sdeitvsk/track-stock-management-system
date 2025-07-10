@@ -48,11 +48,11 @@ const IndentRequest = () => {
 
   useEffect(() => {
     if (stationsData && stationsData.success && stationsData.data?.members) {
-      const departments = stationsData.data.members
-        .map(member => member.department)
-        .filter((dept): dept is string => !!dept) // Filter out null or undefined departments
+      const names = stationsData.data.members
+        .map(member => member.name)
+        .filter((name): name is string => !!name) // Filter out null or undefined names
         .sort((a, b) => a.localeCompare(b)); // Sort alphabetically
-      setStationDepartments(departments);
+      setStationDepartments(names);
     }
   }, [stationsData]);
 
