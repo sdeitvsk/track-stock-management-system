@@ -18,6 +18,7 @@ const issueRoutes = require('./routes/issueRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const indentRequestRoutes = require('./routes/indentRequestRoutes');
 const reportsRoutes = require('./routes/reportsRoutes');
+const loginUserRoutes = require('./routes/loginUserRoutes'); // Assuming you have this route
 
 // Import database
 const { sequelize } = require('./config/database');
@@ -64,6 +65,7 @@ app.use('/api/issues', issueRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/indent-requests', indentRequestRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/login-users', loginUserRoutes); // Assuming you have this route
 
 // Error handling middleware
 app.use(notFound);
