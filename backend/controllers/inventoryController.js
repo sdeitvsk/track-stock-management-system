@@ -235,22 +235,19 @@ const getTransactionSummary = async (req, res) => {
 const getStockCombo = async (req, res) => {
   try {
     // Get value summary for purchases
-    const valueQuery = `
-      WITH ranked_purchases AS (
-        SELECT 
-            id, 
-            item_name, 
-            remaining_quantity,
-            MIN(purchase_date) OVER (PARTITION BY item_name) AS dt,
-            ROW_NUMBER() OVER (PARTITION BY item_name ORDER BY purchase_date) AS r
-        FROM 
+    const valueQuery = `     
+		SELECT 
+            0 as id,
+            item_name,
+            sum(remaining_quantity) as remaining_quantity
+        FROM
             inventory_management.purchase
-        WHERE 
-            remaining_quantity > 0
-    )
-    SELECT *
-    FROM ranked_purchases
-    WHERE r = 1;
+        group by
+            item_name
+            having sum(remaining_quantity) > 0
+        ORDER BY
+            item_name,  id
+
     `;
 
     const [valueSummary] = await sequelize.query(valueQuery);

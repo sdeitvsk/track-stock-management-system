@@ -39,10 +39,11 @@ const IndentRequests = () => {
 
   // Update status mutation
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status, remarks }: { id: number; status: string; remarks?: string }) =>
+    mutationFn: ({ id, status, remarks, approved_quantities }: { id: number; status: string; remarks?: string; approved_quantities?: Array<{ item_id: number; approved_quantity: number }> }) =>
       indentRequestService.updateIndentRequestStatus(id, { 
         status: status as 'approved' | 'rejected' | 'partial',
-        remarks 
+        remarks,
+        approved_quantities
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['indentRequests'] });
@@ -98,8 +99,8 @@ const IndentRequests = () => {
     );
   };
 
-  const handleStatusUpdate = (requestId: number, newStatus: string) => {
-    updateStatusMutation.mutate({ id: requestId, status: newStatus });
+  const handleStatusUpdate = (requestId: number, newStatus: string, approved_quantities?: Array<{ item_id: number; approved_quantity: number }>) => {
+    updateStatusMutation.mutate({ id: requestId, status: newStatus, approved_quantities });
   };
 
   const handleItemChange = (index: number, key: string, value: any) => {
@@ -283,7 +284,7 @@ const IndentRequests = () => {
                                           <TableRow key={index}>
                                             <TableCell>{item.item_name}</TableCell>
                                             <TableCell>{item.quantity}</TableCell>
-                                            {isAdmin ? (
+                                            {isAdmin  && selectedRequest.status === 'pending' ? (
                                               <>
                                                 <TableCell>
                                                   <Input
@@ -324,7 +325,13 @@ const IndentRequests = () => {
                                   {isAdmin && selectedRequest.status === 'pending' && (
                                     <div className="flex space-x-2 pt-4">
                                       <Button 
-                                        onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')}
+                                        onClick={() => {
+                                          const approved_quantities = selectedRequest.items.map((item: any) => ({
+                                            item_id: item.id,
+                                            approved_quantity: item.approved_quantity ?? item.quantity
+                                          }));
+                                          handleStatusUpdate(selectedRequest.id, 'approved', approved_quantities);
+                                        }}
                                         className="bg-green-600 hover:bg-green-700"
                                         disabled={updateStatusMutation.isPending}
                                       >

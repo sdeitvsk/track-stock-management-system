@@ -53,8 +53,8 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
                 <TableRow key={index}>
                   <TableCell className="font-medium">{item.item_name}</TableCell>
                   <TableCell>{item.quantity}</TableCell>
-                  <TableCell>${item.rate.toFixed(2)}</TableCell>
-                  <TableCell>${item.amount.toFixed(2)}</TableCell>
+                  <TableCell>₹ {item.rate.toFixed(2)}</TableCell>
+                  <TableCell>₹ {item.amount.toFixed(2)}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button

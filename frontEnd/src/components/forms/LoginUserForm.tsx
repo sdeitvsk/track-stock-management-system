@@ -80,14 +80,20 @@ const LoginUserForm: React.FC<LoginUserFormProps> = ({
       <div className="space-y-2">
         <Label htmlFor="member_id">Link to Member (Optional)</Label>
         <Select
-          value={watch('member_id')?.toString() || ''}
-          onValueChange={(value) => setValue('member_id', value === '' ? null : parseInt(value))}
+          value={watch('member_id')?.toString() || 'none'}
+          onValueChange={(value) => {
+            if (value === 'none') {
+              setValue('member_id', null);
+            } else {
+              setValue('member_id', parseInt(value));
+            }
+          }}
         >
           <SelectTrigger>
             <SelectValue placeholder="Select a member" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">No member</SelectItem>
+            <SelectItem value="none">No member</SelectItem>
             {availableMembers.map((member) => (
               <SelectItem key={member.id} value={member.id.toString()}>
                 {member.name} - {member.department}
