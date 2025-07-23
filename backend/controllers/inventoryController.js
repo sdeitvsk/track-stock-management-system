@@ -236,17 +236,19 @@ const getStockCombo = async (req, res) => {
   try {
     // Get value summary for purchases
     const valueQuery = `     
-		SELECT 
-            0 as id,
+        SELECT 
+            item_id as id,
             item_name,
-            sum(remaining_quantity) as remaining_quantity
+            sum(remaining_quantity) as remaining_quantity,
+            count(*) cnt
         FROM
             inventory_management.purchase
         group by
+			item_id,
             item_name
             having sum(remaining_quantity) > 0
         ORDER BY
-            item_name,  id
+            item_name;
 
     `;
 

@@ -221,7 +221,7 @@ const IndentRequest = () => {
             <CardTitle>Add Items</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr_3fr_1fr] gap-4 items-end">
               <div>
                   <label className="block text-sm font-medium text-gray-700">
                           Item Name <span className="text-red-500">*</span>
