@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import logo from './../../assests/logo.svg';
 import { 
   Home, 
   Package, 
@@ -12,7 +13,7 @@ import {
   LogOut,
   ClipboardList,
   Inbox,
-  Sparkles,
+  
   UserPlus,
   BarChart3
 } from 'lucide-react';
@@ -47,7 +48,7 @@ const AppSidebar = () => {
       { name: 'Members', href: '/members', icon: Users, color: 'text-cyan-400' },
       { name: 'Login Users', href: '/login-users', icon: UserPlus, color: 'text-emerald-400' },
       { name: 'Reports', href: '/reports', icon: FileText, color: 'text-indigo-400' },
-      { name: 'Advanced Reports', href: '/advanced-reports', icon: BarChart3, color: 'text-red-400' },
+      { name: 'Adv Reports', href: '/advanced-reports', icon: BarChart3, color: 'text-red-400' },
     ];
 
     const staffItems = [
@@ -68,8 +69,8 @@ const AppSidebar = () => {
     <Sidebar className="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white shadow-2xl">
       <SidebarHeader className="px-6 py-6 border-b border-slate-700/50">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-            <Sparkles className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 bg-white rounded-md flex items-center justify-center shadow-lg">
+            <img src={logo} alt="Logo" className="w-6 h-6 text-white" />
           </div>
           {!isCollapsed && (
             <div>

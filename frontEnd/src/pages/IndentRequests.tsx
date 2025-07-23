@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
+// Dialog imports removed, now handled in IndentRequestDialog
+import IndentRequestDetailsPage from './IndentRequestDialog';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '../components/ui/use-toast';
 import { indentRequestService, IndentRequest } from '../services/indentRequestService';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,7 +20,8 @@ const IndentRequests = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRequest, setSelectedRequest] = useState<IndentRequest | null>(null);
+  // Remove selectedRequest state, use navigation instead
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   
   const { toast } = useToast();
@@ -51,7 +54,7 @@ const IndentRequests = () => {
         title: "Success",
         description: "Request status updated successfully",
       });
-      setSelectedRequest(null);
+      // No longer needed: setSelectedRequest(null);
     },
     onError: (error: any) => {
       toast({
@@ -104,13 +107,7 @@ const IndentRequests = () => {
   };
 
   const handleItemChange = (index: number, key: string, value: any) => {
-  setSelectedRequest((prev) => {
-    if (!prev) return prev;
-    const updatedItems = prev.items.map((itm, idx) =>
-      idx === index ? { ...itm, [key]: value } : itm
-    );
-    return { ...prev, items: updatedItems };
-  });
+  // No longer needed: setSelectedRequest for details page
 };
 
 
@@ -230,129 +227,13 @@ const IndentRequests = () => {
                       <TableCell>{new Date(request.requested_date).toLocaleDateString()}</TableCell>
                       <TableCell>{request.requested_by}</TableCell>
                       <TableCell>
-                        <div className="flex space-x-2">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setSelectedRequest(request)}
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-3xl bg-slate-200">
-                              <DialogHeader>
-                                <DialogTitle>Request Details - #{request.id}</DialogTitle>
-                              </DialogHeader>
-                              {selectedRequest && (
-                                <div className="space-y-4">
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                      <strong>Department:</strong> {selectedRequest.department}
-                                    </div>
-                                    <div>
-                                      <strong>Purpose:</strong> {selectedRequest.purpose}
-                                    </div>
-                                    <div>
-                                      <strong>Priority:</strong> {getPriorityBadge(selectedRequest.priority)}
-                                    </div>
-                                    <div>
-                                      <strong>Status:</strong> {getStatusBadge(selectedRequest.status)}
-                                    </div>
-                                    <div>
-                                      <strong>Requested By:</strong> {selectedRequest.requested_by}
-                                    </div>
-                                    <div>
-                                      <strong>Date:</strong> {new Date(selectedRequest.requested_date).toLocaleDateString()}
-                                    </div>
-                                  </div>
-                                  
-                                  <div>
-                                    <strong>Items:</strong>
-                                    <Table>
-                                      <TableHeader>
-                                        <TableRow>
-                                          <TableHead>Item Name</TableHead>
-                                          <TableHead>Quantity</TableHead>
-                                          <TableHead>Approved Qty</TableHead>
-                                          <TableHead>Remarks</TableHead>
-                                        </TableRow>
-                                      </TableHeader>
-                                      <TableBody>
-                                        {selectedRequest.items?.map((item, index) => (
-                                          <TableRow key={index}>
-                                            <TableCell>{item.item_name}</TableCell>
-                                            <TableCell>{item.quantity}</TableCell>
-                                            {isAdmin  && selectedRequest.status === 'pending' ? (
-                                              <>
-                                                <TableCell>
-                                                  <Input
-                                                    type="number"
-                                                    min={0}
-                                                    value={item.approved_quantity ?? item.quantity}
-                                                    onChange={(e) =>
-                                                      handleItemChange(index, 'approved_quantity', Number(e.target.value))
-                                                    }
-                                                    className="w-24"
-                                                  />
-                                                </TableCell>
-                                                <TableCell>
-                                                  <Input
-                                                    value={item.remarks || ''}
-                                                    onChange={(e) => handleItemChange(index, 'remarks', e.target.value)}
-                                                    className="w-32"
-                                                  />
-                                                </TableCell>
-                                              </>
-                                            ) : (
-                                              <>
-                                                <TableCell>
-                                                  <span>{item.approved_quantity ?? item.quantity}</span>
-                                                </TableCell>
-                                                <TableCell>
-                                                  <span>{item.remarks || '-'}</span>
-                                                </TableCell>
-                                              </>
-                                            )}
-
-                                          </TableRow>
-                                        ))}
-                                      </TableBody>
-                                    </Table>
-                                  </div>
-                                  
-                                  {isAdmin && selectedRequest.status === 'pending' && (
-                                    <div className="flex space-x-2 pt-4">
-                                      <Button 
-                                        onClick={() => {
-                                          const approved_quantities = selectedRequest.items.map((item: any) => ({
-                                            item_id: item.id,
-                                            approved_quantity: item.approved_quantity ?? item.quantity
-                                          }));
-                                          handleStatusUpdate(selectedRequest.id, 'approved', approved_quantities);
-                                        }}
-                                        className="bg-green-600 hover:bg-green-700"
-                                        disabled={updateStatusMutation.isPending}
-                                      >
-                                        <CheckCircle className="w-4 h-4 mr-2" />
-                                        Approve
-                                      </Button>
-                                      <Button
-                                        onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')}
-                                        variant="destructive"
-                                        disabled={updateStatusMutation.isPending}
-                                      >
-                                        <XCircle className="w-4 h-4 mr-2" />
-                                        Reject
-                                      </Button>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </DialogContent>
-                          </Dialog>
-                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/indent-requests/${request.id}`)}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))

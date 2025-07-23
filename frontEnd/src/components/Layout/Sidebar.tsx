@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import logo from './../../assests/logo.svg';
 import { 
   Home, 
   Package, 
@@ -11,8 +12,7 @@ import {
   Settings,
   LogOut,
   ClipboardList,
-  Inbox,
-  Sparkles,
+  Inbox, 
   UserPlus,
   BarChart3
 } from 'lucide-react';
@@ -56,7 +56,7 @@ const Sidebar = () => {
       <div className="px-6 py-6 border-b border-slate-700/50">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-            <Sparkles className="w-6 h-6 text-white" />
+            <img src={logo} alt="Logo" className="w-6 h-6 text-white" />
           </div>
           <div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">

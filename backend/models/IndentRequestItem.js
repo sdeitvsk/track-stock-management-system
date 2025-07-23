@@ -42,13 +42,9 @@ const IndentRequestItem = sequelize.define('IndentRequestItem', {
     type: DataTypes.TEXT,
     allowNull: true
   },
-  purchase_id: {
+  item_id: {
     type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-      model: 'purchases',
-      key: 'id'
-    }
+    allowNull: true
   }
 }, {
   tableName: 'indent_request_items',

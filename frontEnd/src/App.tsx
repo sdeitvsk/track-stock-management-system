@@ -27,6 +27,7 @@ import IndentRequest from './pages/IndentRequest';
 import IndentRequests from './pages/IndentRequests';
 import LoginUsers from './pages/LoginUsers';
 import NotFound from './pages/NotFound';
+import IndentRequestDetails from './pages/IndentRequestDetails';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -129,7 +130,7 @@ function App() {
               <Route
                 path="/settings"
                 element={
-                  <ProtectedRoute requireAdmin={true}>
+                  <ProtectedRoute adminOnly={true}>
                     <Settings />
                   </ProtectedRoute>
                 }
@@ -151,9 +152,17 @@ function App() {
                 }
               />
               <Route
+                path="/indent-requests/:id"
+                element={
+                  <ProtectedRoute>
+                    <IndentRequestDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/login-users"
                 element={
-                  <ProtectedRoute requireAdmin={true}>
+                  <ProtectedRoute adminOnly={true}>
                     <LoginUsers />
                   </ProtectedRoute>
                 }

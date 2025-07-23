@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Bell, Search, Sparkles } from 'lucide-react';
+import { Bell, Search } from 'lucide-react';
+import logo from './../../assests/logo.svg';
 import { useAuth } from '../../contexts/AuthContext';
 import { SidebarTrigger } from '../ui/sidebar';
 
@@ -19,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
           <SidebarTrigger className="h-8 w-8 text-purple-600 hover:text-purple-800 hover:bg-purple-100 rounded-lg transition-colors" />
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
-              <Sparkles className="w-8 h-8 text-purple-500" />
+             <img src={logo} alt="Logo" className="w-6 h-6 text-white" />
               {title}
             </h1>
             {subtitle && (

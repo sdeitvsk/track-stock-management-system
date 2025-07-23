@@ -210,30 +210,27 @@ const IndentRequest = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
               <div>
                 <Label htmlFor="item">Item Name *</Label>
-                <Select
-                  value={currentItem.purchase_id?.toString()}
-                  onValueChange={(value) => {
-                    const selectedItem = availableItems.find(item => item.id.toString() === value);
-                    if (selectedItem) {
-                      setCurrentItem({
-                        ...currentItem,
-                        item_name: selectedItem.item_name,
-                        purchase_id: selectedItem.id,
-                      });
-                    }
+                <Input
+                  id="item"
+                  list="item-list"
+                  value={currentItem.item_name}
+                  onChange={e => {
+                    const value = e.target.value;
+                    setCurrentItem({
+                      ...currentItem,
+                      item_name: value
+                    });
                   }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select item" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableItems.map((item) => (
-                      <SelectItem key={item.id} value={item.id.toString()}>
-                        {item.item_name} ({item.remaining_quantity} left)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="Select or enter item name"
+                  autoComplete="off"
+                />
+                <datalist id="item-list">
+                  {availableItems.map((item, index) => (
+                    <option key={index} value={item.item_name}>
+                      {item.item_name} ({item.remaining_quantity} left)
+                    </option>
+                  ))}
+                </datalist>
 
               </div>
               <div>
@@ -295,6 +292,7 @@ const IndentRequest = () => {
                       <TableCell>{item.remarks || '-'}</TableCell>
                       <TableCell>
                         <Button
+                          type="button"
                           variant="outline"
                           size="sm"
                           onClick={() => removeItem(index)}
