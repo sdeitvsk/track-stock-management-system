@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import IndentRequestDetailsPage from "./IndentRequestDialog";
+import IndentRequestDetailsPage from "./IndentRequestDetailsPage";
 import Layout from "../components/Layout/Layout";
 import { Button } from "../components/ui/button";
 import { indentRequestService } from "../services/indentRequestService";

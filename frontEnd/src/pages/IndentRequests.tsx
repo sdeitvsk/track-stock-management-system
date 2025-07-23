@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 // Dialog imports removed, now handled in IndentRequestDialog
-import IndentRequestDetailsPage from './IndentRequestDialog';
+import IndentRequestDetailsPage from './IndentRequestDetailsPage';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../components/ui/use-toast';
 import { indentRequestService, IndentRequest } from '../services/indentRequestService';

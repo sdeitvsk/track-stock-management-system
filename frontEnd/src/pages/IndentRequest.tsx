@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { inventoryService } from '../services/inventoryService';
 import { indentRequestService, IndentRequestItem } from '../services/indentRequestService';
 import { useToast } from '../hooks/use-toast';
+import CreatableSelect from "react-select/creatable";
 
 const IndentRequest = () => {
   const navigate = useNavigate();
@@ -141,6 +142,19 @@ const IndentRequest = () => {
     });
   };
 
+  const options = availableItems.map(item => ({
+  label: `${item.item_name} (${item.remaining_quantity} left)`,
+  value: item.item_name
+}));
+
+  
+  const handleChange = newValue => {
+    setCurrentItem({
+      ...currentItem,
+      item_name: newValue?.value || ""
+    });
+  };
+
   return (
     <Layout title="Indent Request" subtitle="Request items from inventory">
       <div className="space-y-6">
@@ -209,29 +223,15 @@ const IndentRequest = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
               <div>
-                <Label htmlFor="item">Item Name *</Label>
-                <Input
-                  id="item"
-                  list="item-list"
-                  value={currentItem.item_name}
-                  onChange={e => {
-                    const value = e.target.value;
-                    setCurrentItem({
-                      ...currentItem,
-                      item_name: value
-                    });
-                  }}
-                  placeholder="Select or enter item name"
-                  autoComplete="off"
-                />
-                <datalist id="item-list">
-                  {availableItems.map((item, index) => (
-                    <option key={index} value={item.item_name}>
-                      {item.item_name} ({item.remaining_quantity} left)
-                    </option>
-                  ))}
-                </datalist>
-
+                  <label className="block text-sm font-medium text-gray-700">
+                          Item Name <span className="text-red-500">*</span>
+                        </label>
+                        <CreatableSelect
+                          options={options}
+                          onChange={handleChange}
+                          placeholder="Select or type item name"
+                          isClearable
+                        />
               </div>
               <div>
                 <Label htmlFor="quantity">Quantity *</Label>

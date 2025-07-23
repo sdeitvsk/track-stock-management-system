@@ -4,6 +4,7 @@ import { CheckCircle, XCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
+import PurchaseItemSelect from "@/components/forms/PurchaseItemSelect";
 
 interface IndentRequestDetailsPageProps {
   request: any;
@@ -56,7 +57,8 @@ const IndentRequestDetailsPage: React.FC<IndentRequestDetailsPageProps> = ({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Item Name</TableHead>
+                <TableHead>Request Item Name</TableHead>
+                <TableHead>Available Stock</TableHead>
                 <TableHead>Quantity</TableHead>
                 <TableHead>Approved Qty</TableHead>
                 <TableHead>Remarks</TableHead>
@@ -66,6 +68,13 @@ const IndentRequestDetailsPage: React.FC<IndentRequestDetailsPageProps> = ({
               {request.items?.map((item: any, index: number) => (
                 <TableRow key={index}>
                   <TableCell className="p-1">{item.item_name}</TableCell>
+                  <TableCell className="p-1">
+                    <PurchaseItemSelect
+                      value={item.purchase_id}
+                      onChange={(val) => handleItemChange(index, 'purchase_id', val)}
+                      placeholder="Select available item"
+                    />
+                  </TableCell>
                   <TableCell className="p-1">{item.quantity}</TableCell>
                   {isAdmin && request.status === "pending" ? (
                     <>
