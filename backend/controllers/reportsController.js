@@ -68,11 +68,7 @@ const getStockBalanceDetailed = async (req, res) => {
       WITH tiu AS (
         SELECT i.purchase_id, i.quantity FROM issue i
         ${as_on_date ? `WHERE i.issue_date <= '${as_on_date}'` : ''}
-        UNION 
-        SELECT iri.purchase_id, iri.approved_quantity 
-        FROM indent_request_items iri
-        JOIN indent_requests ir ON iri.indent_request_id = ir.id
-        ${as_on_date ? `WHERE ir.approved_date <= '${as_on_date}'` : ''}
+        
       ), 
       TotalIssues AS (
         SELECT purchase_id, SUM(quantity) as Total_issues 
@@ -127,11 +123,7 @@ const getStockBalanceSummary = async (req, res) => {
         SELECT i.purchase_id, i.quantity 
         FROM issue i
         ${as_on_date ? `WHERE i.issue_date <= '${as_on_date}'` : ''}
-        UNION 
-        SELECT iri.purchase_id, iri.approved_quantity 
-        FROM indent_request_items iri
-        JOIN indent_requests ir ON iri.indent_request_id = ir.id
-        ${as_on_date ? `WHERE ir.approved_date <= '${as_on_date}'` : ''}
+       
       ), 
       TotalIssues AS (
         SELECT purchase_id, SUM(quantity) AS total_issues 

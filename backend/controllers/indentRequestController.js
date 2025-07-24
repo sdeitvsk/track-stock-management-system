@@ -1,7 +1,7 @@
-
 const { IndentRequest, IndentRequestItem, Member } = require('../models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../config/database');
+const { createIssue } = require('./issueController'); // Import the createOrUpdateIssue function
 
 // Create a new indent request
 const createIndentRequest = async (req, res) => {
@@ -248,6 +248,83 @@ const getIndentRequestById = async (req, res) => {
   }
 };
 
+// Helper function to create issue transaction from approved indent request
+const createIssueFromIndentRequest = async (indentRequest, approved_quantities) => {
+  try {
+    // Get available purchases for the indent request items
+    const availablePurchases = await sequelize.query(
+      `SELECT p.id, p.item_id, p.item_name, p.remaining_quantity, i.indent_request_id, i.id as item_request_id
+       FROM purchase p
+       JOIN indent_request_items i ON p.item_id = i.item_id
+       WHERE i.indent_request_id = :id AND p.remaining_quantity > 0
+       ORDER BY p.purchase_date ASC`,
+      { 
+        replacements: { id: indentRequest.id }, 
+        type: sequelize.QueryTypes.SELECT 
+      }
+    );
+
+    // Prepare items for issue creation
+    const issueItems = [];
+    
+    for (const approvedItem of approved_quantities) {
+      const matchingPurchases = availablePurchases.filter(
+        p => p.item_request_id === approvedItem.item_id
+      );
+      
+      if (matchingPurchases.length > 0) {
+        // Use the first available purchase (FIFO)
+        const purchase = matchingPurchases[0];
+        
+        issueItems.push({
+          item_name: purchase.item_name,
+          quantity: approvedItem.approved_quantity,
+          purchase_id: purchase.id
+        });
+      }
+    }
+
+    if (issueItems.length === 0) {
+      throw new Error('No matching purchases found for approved items');
+    }
+
+    // Create the issue request payload
+    const issuePayload = {
+      member_id: indentRequest.member_id,
+      items: issueItems,
+      description: `Indent Request #${indentRequest.id} - ${indentRequest.purpose}`,
+      invoice_no: `IR-${indentRequest.id}`,
+      invoice_date: new Date().toISOString().split('T')[0]
+    };
+
+    // Create mock request and response objects for the createIssue function
+    const mockReq = {
+      body: issuePayload
+    };
+
+    const mockRes = {
+      status: (code) => ({
+        json: (data) => {
+          if (code >= 400) {
+            throw new Error(data.message || 'Error creating issue');
+          }
+          return data;
+        }
+      }),
+      json: (data) => data
+    };
+
+    // Call the createIssue function
+    const result = await createIssue(mockReq, mockRes);
+    
+    return result;
+
+  } catch (error) {
+    console.error('Error creating issue from indent request:', error);
+    throw error;
+  }
+};
+
 // Update indent request status
 const updateIndentRequestStatus = async (req, res) => {
   try {
@@ -283,6 +360,19 @@ const updateIndentRequestStatus = async (req, res) => {
       }
     }
 
+    // Auto-create issue transaction when indent is approved
+    let issueResult = null;
+    if (status === 'approved' && approved_quantities && approved_quantities.length > 0) {
+      try {
+        issueResult = await createIssueFromIndentRequest(indentRequest, approved_quantities);
+        console.log('Auto-created issue transaction:', issueResult);
+      } catch (issueError) {
+        console.error('Error auto-creating issue:', issueError);
+        // Don't fail the indent approval if issue creation fails
+        // You might want to add a flag or notification about this
+      }
+    }
+
     // Fetch updated request
     const updatedRequest = await IndentRequest.findByPk(id, {
       include: [
@@ -298,11 +388,20 @@ const updateIndentRequestStatus = async (req, res) => {
       ]
     });
 
-    res.json({
+    const response = {
       success: true,
       message: 'Indent request updated successfully',
       data: updatedRequest
-    });
+    };
+
+    // Include issue creation result if it was created
+    if (issueResult) {
+      response.issue_created = true;
+      response.issue_data = issueResult;
+      response.message += ' and issue transaction created automatically';
+    }
+
+    res.json(response);
 
   } catch (error) {
     console.error('Error updating indent request:', error);

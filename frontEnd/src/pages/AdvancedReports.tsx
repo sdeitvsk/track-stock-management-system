@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import Layout from '../components/Layout/Layout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import ReportsFilters from '../components/Reports/ReportsFilters';
 import ReportRenderer from '../components/Reports/ReportRenderer';
 import { FileBarChart } from 'lucide-react';
 import { getEnabledReports, getReportById } from '../config/reportsConfig';
+import Select from "react-select/creatable";
 
 const AdvancedReports = () => {
   const enabledReports = getEnabledReports();
@@ -29,10 +28,9 @@ const AdvancedReports = () => {
   };
 
   const getReportType = () => {
-    const report = getReportById(activeTab);
-    if (!report) return 'transactions' as const;
+    if (!currentReport) return 'transactions' as const;
     
-    switch (report.filterType) {
+    switch (currentReport.filterType) {
       case 'date-range':
         return 'transactions' as const;
       case 'as-on-date':
@@ -42,15 +40,42 @@ const AdvancedReports = () => {
     }
   };
 
+  const handleReportChange = (selectedOption: any) => {
+    if (selectedOption?.value) {
+      setActiveTab(selectedOption.value);
+    }
+  };
+
+  const reportOptions = enabledReports.map((report) => ({
+    label: report.title,
+    value: report.id
+  }));
+
+  const selectedOption = reportOptions.find(option => option.value === activeTab);
+
   return (
     <Layout title="Advanced Reports" subtitle="Comprehensive inventory and transaction analytics">
       <div className="space-y-6">
         {/* Reports Header */}
-        <div className="flex items-center gap-3">
-          <FileBarChart className="w-8 h-8 text-purple-600" />
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Advanced Reports</h2>
-            <p className="text-gray-600">Generate detailed reports with advanced filtering options</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <FileBarChart className="w-8 h-8 text-purple-600" />
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Advanced Reports</h2>
+              <p className="text-gray-600">Generate detailed reports with advanced filtering options</p>
+            </div>
+          </div>
+          
+          <div className="min-w-[250px]">
+            <Select
+              options={reportOptions}
+              value={selectedOption}
+              onChange={handleReportChange}
+              placeholder="Select Report"
+              isSearchable={true}
+              className="react-select-container"
+              classNamePrefix="react-select"
+            />
           </div>
         </div>
 
@@ -63,31 +88,16 @@ const AdvancedReports = () => {
           onExport={handleExport}
         />
 
-        {/* Dynamic Reports Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className={`grid w-full grid-cols-${enabledReports.length}`}>
-            {enabledReports.map((report) => {
-              const IconComponent = report.icon;
-              return (
-                <TabsTrigger key={report.id} value={report.id} className="flex items-center gap-2">
-                  <IconComponent className="w-4 h-4" />
-                  {report.title}
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
-
-          {/* Dynamic Report Content */}
-          {enabledReports.map((report) => (
-            <TabsContent key={report.id} value={report.id}>
-              <ReportRenderer 
-                reportConfig={report}
-                filters={filters}
-                isActive={activeTab === report.id}
-              />
-            </TabsContent>
-          ))}
-        </Tabs>
+        {/* Dynamic Report Content */}
+        {currentReport && (
+          <div className="mt-6">
+            <ReportRenderer 
+              reportConfig={currentReport}
+              filters={filters}
+              isActive={true}
+            />
+          </div>
+        )}
       </div>
     </Layout>
   );

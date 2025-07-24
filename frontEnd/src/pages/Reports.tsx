@@ -75,7 +75,7 @@ const Reports = () => {
     { name: 'Critical', value: dashboardData.inventory_summary.filter(item => (item.current_stock / item.total_purchased) * 100 < 10).length, color: '#ef4444' }
   ];
 
-  const totalValue = dashboardData.inventory_summary.reduce((sum, item) => sum + item.current_value, 0);
+  const totalValue = dashboardData.inventory_summary.reduce((sum, item) => sum + +item.current_value, 0);
 
   return (
     <Layout title="Reports" subtitle="Inventory analytics and insights">
@@ -108,7 +108,7 @@ const Reports = () => {
               <CardTitle className="text-sm font-medium text-slate-600">Total Value</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${totalValue.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{totalValue}</div>
             </CardContent>
           </Card>
           
@@ -220,8 +220,8 @@ const Reports = () => {
                         <td className="p-2">{item.current_stock}</td>
                         <td className="p-2">{item.total_purchased}</td>
                         <td className="p-2">{item.total_issued}</td>
-                        <td className="p-2">${Number(item.average_rate).toFixed(2)}</td>
-                        <td className="p-2">${item.current_value.toLocaleString()}</td>
+                        <td className="p-2">₹ {Number(item.average_rate).toFixed(2)}</td>
+                        <td className="p-2">₹ {item.current_value.toLocaleString()}</td>
                         <td className="p-2">{utilization}%</td>
                       </tr>
                     );

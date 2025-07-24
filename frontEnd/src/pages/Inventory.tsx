@@ -47,12 +47,12 @@ const Inventory = () => {
 
   const formatCurrency = (value: any): string => {
     const num = Number(value);
-    return isNaN(num) ? '$0.00' : `$${num.toFixed(2)}`;
+    return isNaN(num) ? '₹ 0.00' : `₹ ${num.toFixed(2)}`;
   };
 
   const formatCurrencyWithCommas = (value: any): string => {
     const num = Number(value);
-    return isNaN(num) ? '$0' : `$${num.toLocaleString()}`;
+    return isNaN(num) ? '₹ 0' : `₹ ${num.toLocaleString()}`;
   };
 
   return (
