@@ -1,6 +1,7 @@
 
 const { IndentRequest, IndentRequestItem, Member } = require('../models');
 const { Op } = require('sequelize');
+const { sequelize } = require('../config/database');
 
 // Create a new indent request
 const createIndentRequest = async (req, res) => {
@@ -44,7 +45,7 @@ const createIndentRequest = async (req, res) => {
       item_name: item.item_name,
       quantity: item.quantity,
       remarks: item.remarks,
-      purchase_id: item.purchase_id || null // Optional field
+      item_id: item.item_id || null // Optional field
     }));
 
     await IndentRequestItem.bulkCreate(itemsWithRequestId);
@@ -220,10 +221,21 @@ const getIndentRequestById = async (req, res) => {
         message: 'Indent request not found'
       });
     }
+      // Run the custom query
+      const availablePurchases = await sequelize.query(
+        `SELECT p.id, p.item_id, p.item_name, p.remaining_quantity, i.indent_request_id
+         FROM purchase p
+         JOIN indent_request_items i ON p.item_id = i.item_id
+         WHERE i.indent_request_id = :id AND p.remaining_quantity > 0`,
+        { replacements: { id: indentRequest.id }, type: sequelize.QueryTypes.SELECT }
+      );
+
+      console.log(availablePurchases);
 
     res.json({
       success: true,
-      data: indentRequest
+      data: indentRequest,
+      availablePurchases
     });
 
   } catch (error) {
@@ -302,6 +314,84 @@ const updateIndentRequestStatus = async (req, res) => {
   }
 };
 
+// Update (edit) an indent request (only if pending, only by creator or admin)
+const updateIndentRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { department, purpose, priority = 'normal', items } = req.body;
+    const username = req.user.username;
+    const userRole = req.user.role;
+
+    // Find the indent request
+    const indentRequest = await IndentRequest.findByPk(id, {
+      include: [{ model: IndentRequestItem, as: 'items' }]
+    });
+
+    if (!indentRequest) {
+      return res.status(404).json({
+        success: false,
+        message: 'Indent request not found'
+      });
+    }
+
+    // Only allow editing if pending
+    if (indentRequest.status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: 'Only pending indent requests can be edited'
+      });
+    }
+
+    // Only creator or admin can edit
+    if (userRole !== 'admin' && indentRequest.requested_by !== username) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to edit this indent request'
+      });
+    }
+
+    // Update main fields
+    indentRequest.department = department;
+    indentRequest.purpose = purpose;
+    indentRequest.priority = priority;
+    await indentRequest.save();
+
+    // Update items: remove old, add new
+    await IndentRequestItem.destroy({ where: { indent_request_id: id } });
+    if (items && items.length > 0) {
+      const itemsWithRequestId = items.map(item => ({
+        indent_request_id: id,
+        item_name: item.item_name,
+        quantity: item.quantity,
+        remarks: item.remarks,
+        item_id: item.item_id || null
+      }));
+      await IndentRequestItem.bulkCreate(itemsWithRequestId);
+    }
+
+    // Fetch updated request
+    const updatedRequest = await IndentRequest.findByPk(id, {
+      include: [
+        { model: IndentRequestItem, as: 'items' },
+        { model: Member, as: 'member', attributes: ['id', 'name', 'department'] }
+      ]
+    });
+
+    res.json({
+      success: true,
+      message: 'Indent request updated successfully',
+      data: updatedRequest
+    });
+  } catch (error) {
+    console.error('Error updating indent request:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating indent request',
+      error: error.message
+    });
+  }
+};
+
 // Delete indent request
 const deleteIndentRequest = async (req, res) => {
   try {
@@ -346,5 +436,6 @@ module.exports = {
   getIndentRequests,
   getIndentRequestById,
   updateIndentRequestStatus,
+  updateIndentRequest, // Export the new function
   deleteIndentRequest
 };

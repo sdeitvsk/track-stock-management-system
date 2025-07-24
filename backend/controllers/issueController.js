@@ -120,7 +120,7 @@ async function processIssueItems({ items, transaction_id, member_id, dbTransacti
 
     const availablePurchases = await Purchase.findAll({
       where: {
-        item_name,
+        id: item.purchase_id,
         remaining_quantity: { [sequelize.Sequelize.Op.gt]: 0 }
       },
       order: [['purchase_date', 'ASC']],

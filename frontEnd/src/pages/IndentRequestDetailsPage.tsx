@@ -3,8 +3,9 @@ import { Button } from "../components/ui/button";
 import { CheckCircle, XCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
 import PurchaseItemSelect from "@/components/forms/PurchaseItemSelect";
+import { AvailablePurchase } from "@/services/indentRequestService";
+
 
 interface IndentRequestDetailsPageProps {
   request: any;
@@ -14,6 +15,7 @@ interface IndentRequestDetailsPageProps {
   getStatusBadge: (status: string) => React.ReactNode;
   handleItemChange: (index: number, key: string, value: any) => void;
   handleStatusUpdate: (requestId: number, newStatus: string, approved_quantities?: Array<{ item_id: number; approved_quantity: number }>) => void;
+  availablePurchases: AvailablePurchase[];
 }
 
 const IndentRequestDetailsPage: React.FC<IndentRequestDetailsPageProps> = ({
@@ -24,11 +26,17 @@ const IndentRequestDetailsPage: React.FC<IndentRequestDetailsPageProps> = ({
   getStatusBadge,
   handleItemChange,
   handleStatusUpdate,
+  availablePurchases,
 }) => {
+
+
   if (!request) {
     return <div className="p-8 text-center text-gray-500">No request found.</div>;
   }
   return (
+    <>
+  
+   
     <div className="w-full mx-auto bg-slate-200 p-8 rounded-lg shadow">
       <h2 className="text-2xl font-bold mb-4">Request Details - #{request.id}</h2>
       <div className="space-y-4">
@@ -68,24 +76,32 @@ const IndentRequestDetailsPage: React.FC<IndentRequestDetailsPageProps> = ({
               {request.items?.map((item: any, index: number) => (
                 <TableRow key={index}>
                   <TableCell className="p-1">{item.item_name}</TableCell>
-                  <TableCell className="p-1">
-                    <PurchaseItemSelect
-                      value={item.purchase_id}
-                      onChange={(val) => handleItemChange(index, 'purchase_id', val)}
-                      placeholder="Select available item"
-                    />
+                  <TableCell className="p-1 text-center">
+                    {(() => {
+                      const maxQty = availablePurchases.length > 0
+                        ? availablePurchases.reduce((acc, p) => acc + (p.item_id === item.item_id ? p.remaining_quantity : 0), 0)
+                        : 0;
+                      item.maxQty = maxQty;
+                      return maxQty;
+                    })()}
                   </TableCell>
-                  <TableCell className="p-1">{item.quantity}</TableCell>
+                  <TableCell className="p-1 text-center">{item.quantity}</TableCell>
                   {isAdmin && request.status === "pending" ? (
                     <>
                       <TableCell className="p-1">
                         <Input
                           type="number"
                           min={0}
+                          max={item.maxQty}
                           value={item.approved_quantity ?? item.quantity}
-                          onChange={(e) =>
-                            handleItemChange(index, "approved_quantity", Number(e.target.value))
-                          }
+                          onChange={(e) => {
+                            const newQty = Number(e.target.value);
+                            if (newQty > item.maxQty) {
+                              alert(`Quantity cannot be more than maximum allowed (${item.maxQty})`);
+                              return; // prevent update
+                            }
+                            handleItemChange(index, "approved_quantity", newQty);
+                          }}
                           className="w-24"
                         />
                       </TableCell>
@@ -140,6 +156,7 @@ const IndentRequestDetailsPage: React.FC<IndentRequestDetailsPageProps> = ({
         )}
       </div>
     </div>
+    </>
   );
 };
 

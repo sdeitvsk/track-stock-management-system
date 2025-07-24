@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import IndentRequestDetailsPage from "./IndentRequestDetailsPage";
@@ -6,13 +6,14 @@ import Layout from "../components/Layout/Layout";
 import { Button } from "../components/ui/button";
 import { indentRequestService } from "../services/indentRequestService";
 import { useAuth } from "../contexts/AuthContext";
+import { AvailablePurchase } from "../services/indentRequestService";
 
 const IndentRequestDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isAdmin } = useAuth();
-
+  const [availablePurchases, setAvailablePurchases] = useState<AvailablePurchase[]>([]);
   // Fetch single indent request
   const requestIdNum = id ? Number(id) : undefined;
   const { data, isLoading, error } = useQuery({
@@ -65,6 +66,8 @@ const IndentRequestDetails = () => {
   const [requestState, setRequestState] = React.useState(null);
   React.useEffect(() => {
     if (data?.data) setRequestState(data.data);
+    if (data?.availablePurchases) setAvailablePurchases(data.availablePurchases);
+    
   }, [data]);
 
   const handleItemChange = (index, key, value) => {
@@ -90,8 +93,13 @@ const IndentRequestDetails = () => {
 
   return (
     <Layout title="Indent Request Details" subtitle={`Request #${id}`}>
-      <div className="mb-4">
+      <div className="mb-4 flex gap-2">
         <Button variant="outline" onClick={() => navigate("/indent-requests")}>Back to Requests</Button>
+        {requestState && requestState.status === 'pending' && (isAdmin || requestState.requested_by === (window.localStorage.getItem('username') || '')) && (
+          <Button variant="default" onClick={() => navigate(`/indent-requests/${id}/edit`)}>
+            Edit
+        </Button>
+        )}
       </div>
       <IndentRequestDetailsPage
         request={requestState}
@@ -101,6 +109,7 @@ const IndentRequestDetails = () => {
         getStatusBadge={getStatusBadge}
         handleItemChange={handleItemChange}
         handleStatusUpdate={handleStatusUpdate}
+        availablePurchases={availablePurchases}
       />
     </Layout>
   );

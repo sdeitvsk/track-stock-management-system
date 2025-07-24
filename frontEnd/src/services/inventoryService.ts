@@ -200,6 +200,7 @@ export const inventoryService = {
     transaction_id?: number; // Optional for new issues
     member_id: number;
     items: Array<{
+      purchase_id:number;
       item_name: string;
       quantity: number;
     }>;

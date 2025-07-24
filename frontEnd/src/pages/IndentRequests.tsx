@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Eye, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, Clock, AlertCircle, Pencil } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -234,6 +234,13 @@ const IndentRequests = () => {
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
+                        {request.status === 'pending' && (isAdmin || request.requested_by === (window.localStorage.getItem('username') || '')) && (
+                          <Button variant="outline" 
+                          size="sm"
+                          onClick={() => navigate(`/indent-requests/${request.id}/edit`)}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))

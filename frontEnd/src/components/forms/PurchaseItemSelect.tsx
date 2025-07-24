@@ -27,7 +27,7 @@ interface PurchaseItem {
 
 interface PurchaseItemSelectProps {
   value: string;
-  onChange: (value: { purchase_id: string; item_name: string }) => void;
+  onChange: (value: { purchase_id: string; item_name: string; remaining_quantity: number }) => void;
   placeholder?: string;
 }
 
@@ -105,7 +105,8 @@ const PurchaseItemSelect: React.FC<PurchaseItemSelectProps> = ({
                   key={item.id}
                   value={`${item.item_name}-${item.id}`}
                   onSelect={() => {
-                    onChange({ purchase_id: item.id.toString(), item_name: item.item_name });
+                    onChange({ purchase_id: item.id.toString(), item_name: item.item_name, 
+                              remaining_quantity: item.remaining_quantity });
                     setOpen(false);
                   }}
                 >

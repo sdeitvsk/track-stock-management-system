@@ -130,7 +130,7 @@ const PurchaseEntry = () => {
       setEditingIndex(null);
     } else {
       // Add new item
-      setInvoiceItems(prev => [...prev, { ...currentItem }]);
+      setInvoiceItems(prev => [ { ...currentItem }, ...prev]);
     }
 
     // Reset current item

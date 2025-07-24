@@ -94,12 +94,13 @@ const IssueEntry = () => {
     }
   };
 
-  const handleItemChange = (field: keyof IssueItem, value: string | number | { purchase_id: string; item_name: string }) => {
+  const handleItemChange = (field: keyof IssueItem, value: string | number | { purchase_id: string; item_name: string; remaining_quantity?: number }) => {
     if (field === 'purchase_id' && typeof value === 'object' && value !== null) {
       setCurrentItem(prev => ({
         ...prev,
         purchase_id: value.purchase_id,
-        item_name: value.item_name
+        item_name: value.item_name,
+        remaining_quantity: value.remaining_quantity
       }));
     } else {
       setCurrentItem(prev => ({
@@ -127,7 +128,7 @@ const IssueEntry = () => {
     } else {
       console.log('Adding new item:', currentItem);
       
-      setIssueItems(prev => [...prev, { ...currentItem }]);
+      setIssueItems(prev => [ { ...currentItem }, ...prev]);
     }
 
     setCurrentItem({
@@ -167,6 +168,7 @@ const IssueEntry = () => {
     setLoading(true);
     try {
       const items = issueItems.map(item => ({
+        purchase_id: parseInt(item.purchase_id),
         item_name: item.item_name,
         quantity: item.quantity
       }));

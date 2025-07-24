@@ -160,6 +160,14 @@ function App() {
                 }
               />
               <Route
+                path="/indent-requests/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <IndentRequest />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/login-users"
                 element={
                   <ProtectedRoute adminOnly={true}>

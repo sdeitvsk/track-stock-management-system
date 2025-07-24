@@ -6,7 +6,15 @@ export interface IndentRequestItem {
   quantity: number;
   remarks?: string;
   approved_quantity?: number; // Optional, used for approved requests
-  purchase_id?: number; // Optional, used for linking to existing purchases 
+  item_id?: number; // Optional, used for linking to existing purchases 
+}
+
+export interface AvailablePurchase {
+  id: number;
+  item_id: number;
+  item_name: string;
+  remaining_quantity: number;
+  indent_request_id: number;
 }
 
 export interface CreateIndentRequestPayload {
@@ -78,8 +86,15 @@ export const indentRequestService = {
     status: 'approved' | 'rejected' | 'partial';
     remarks?: string;
     approved_quantities?: Array<{ item_id: number; approved_quantity: number }>;
+    available_purchases?: Array<{ item_id: number; remaining_quantity: number, indent_request_id: number, item_name: string }>;
   }) => {
     const response = await api.patch(`/indent-requests/${id}/status`, data);
+    return response.data;
+  },
+
+  // Update (edit) indent request
+  updateIndentRequest: async (id: number, data: CreateIndentRequestPayload) => {
+    const response = await api.put(`/indent-requests/${id}`, data);
     return response.data;
   },
 

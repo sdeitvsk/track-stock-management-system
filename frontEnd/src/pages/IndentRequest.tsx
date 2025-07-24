@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Trash2, Send } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import { Button } from '../components/ui/button';
@@ -15,21 +15,26 @@ import { indentRequestService, IndentRequestItem } from '../services/indentReque
 import { useToast } from '../hooks/use-toast';
 import CreatableSelect from "react-select/creatable";
 
+
 const IndentRequest = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { toast } = useToast();
-  
+  const isEditMode = Boolean(id);
+
   const [indentItems, setIndentItems] = useState<IndentRequestItem[]>([]);
   const [currentItem, setCurrentItem] = useState<IndentRequestItem>({
     item_name: '',
     quantity: 1,
     remarks: '',
-    purchase_id: undefined // Optional, used for linking to existing purchases
+    item_id: undefined // Optional, used for linking to existing purchases
   });
   const [department, setDepartment] = useState('');
   const [purpose, setPurpose] = useState('');
   const [priority, setPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal');
   const [stationDepartments, setStationDepartments] = useState<string[]>([]);
+  const [isLoadingInitial, setIsLoadingInitial] = useState(isEditMode);
+  
 
   // Fetch available items
   const { data: inventoryData } = useQuery({
@@ -39,23 +44,48 @@ const IndentRequest = () => {
 
   const availableItems = (inventoryData?.data?.stock_combo) || [];
 
-  console.log("Available Items:", availableItems);
-
   // Fetch stations
   const { data: stationsData, isLoading: isLoadingStations, error: stationsError } = useQuery({
     queryKey: ['stations'],
-    queryFn: () => inventoryService.getMembers({ type: 'station', limit: 1000 }) // Assuming a large limit to get all stations
+    queryFn: () => inventoryService.getMembers({ type: 'station', limit: 1000 })
   });
 
   useEffect(() => {
     if (stationsData && stationsData.success && stationsData.data?.members) {
       const names = stationsData.data.members
         .map(member => member.name)
-        .filter((name): name is string => !!name) // Filter out null or undefined names
-        .sort((a, b) => a.localeCompare(b)); // Sort alphabetically
+        .filter((name): name is string => !!name)
+        .sort((a, b) => a.localeCompare(b));
       setStationDepartments(names);
     }
   }, [stationsData]);
+
+  // Fetch existing indent request if in edit mode
+  useEffect(() => {
+    if (!isEditMode) return;
+    const fetchIndentRequest = async () => {
+      setIsLoadingInitial(true);
+      try {
+        const response = await indentRequestService.getIndentRequestById(Number(id));
+        if (response.success && response.data) {
+          setDepartment(response.data.department);
+          setPurpose(response.data.purpose);
+          setPriority(response.data.priority);
+          setIndentItems(response.data.items || []);
+          
+        } else {
+          toast({ title: 'Error', description: 'Failed to load indent request', variant: 'destructive' });
+          navigate('/indent-requests');
+        }
+      } catch (error) {
+        toast({ title: 'Error', description: 'Failed to load indent request', variant: 'destructive' });
+        navigate('/indent-requests');
+      } finally {
+        setIsLoadingInitial(false);
+      }
+    };
+    fetchIndentRequest();
+  }, [id, isEditMode, navigate, toast]);
 
   // Create indent request mutation
   const createIndentMutation = useMutation({
@@ -65,19 +95,35 @@ const IndentRequest = () => {
         title: "Success",
         description: "Indent request submitted successfully"
       });
-      
-      // Reset form
       setIndentItems([]);
       setDepartment('');
       setPurpose('');
       setPriority('normal');
-      
       navigate('/indent-requests');
     },
     onError: (error: any) => {
       toast({
         title: "Error",
         description: error.response?.data?.message || "Failed to submit indent request",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Update indent request mutation
+  const updateIndentMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: any }) => indentRequestService.updateIndentRequest(id, data),
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Indent request updated successfully"
+      });
+      navigate('/indent-requests');
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to update indent request",
         variant: "destructive"
       });
     }
@@ -92,30 +138,23 @@ const IndentRequest = () => {
       });
       return;
     }
-
     const existingItemIndex = indentItems.findIndex(item => item.item_name === currentItem.item_name);
-    
     if (existingItemIndex >= 0) {
       const updatedItems = [...indentItems];
       updatedItems[existingItemIndex].quantity += currentItem.quantity;
       setIndentItems(updatedItems);
     } else {
-      setIndentItems([...indentItems, { ...currentItem }]);
+      setIndentItems([ { ...currentItem }, ...indentItems]);
     }
-
     setCurrentItem({ item_name: '', quantity: 1, remarks: '' });
-    
-    toast({
-      title: "Success",
-      description: "Item added to indent request"
-    });
+    toast({ title: "Success", description: "Item added to indent request" });
   };
 
   const removeItem = (index: number) => {
     setIndentItems(indentItems.filter((_, i) => i !== index));
   };
 
-  const submitIndentRequest = () => {
+  const handleSubmit = () => {
     if (indentItems.length === 0) {
       toast({
         title: "Error",
@@ -124,7 +163,6 @@ const IndentRequest = () => {
       });
       return;
     }
-
     if (!department || !purpose) {
       toast({
         title: "Error",
@@ -133,30 +171,46 @@ const IndentRequest = () => {
       });
       return;
     }
-
-    createIndentMutation.mutate({
-      department,
-      purpose,
-      priority,
-      items: indentItems
-    });
+    if (isEditMode) {
+      updateIndentMutation.mutate({
+        id: Number(id),
+        data: {
+          department,
+          purpose,
+          priority,
+          items: indentItems
+        }
+      });
+    } else {
+      createIndentMutation.mutate({
+        department,
+        purpose,
+        priority,
+        items: indentItems
+      });
+    }
   };
 
   const options = availableItems.map(item => ({
-  label: `${item.item_name} (${item.remaining_quantity} left)`,
-  value: item.item_name
-}));
+    label: `${item.item_name} (${item.remaining_quantity} left)`,
+    value: item.item_name,
+    item_id: item.id
+  }));
 
-  
   const handleChange = newValue => {
     setCurrentItem({
       ...currentItem,
-      item_name: newValue?.value || ""
+      item_name: newValue?.value || "",
+      item_id: newValue?.item_id || undefined
     });
   };
 
+  if (isLoadingInitial) {
+    return <Layout title={isEditMode ? "Edit Indent Request" : "Indent Request"} subtitle={isEditMode ? "Loading..." : "Request items from inventory"}><div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div></Layout>;
+  }
+
   return (
-    <Layout title="Indent Request" subtitle="Request items from inventory">
+    <Layout title={isEditMode ? "Edit Indent Request" : "Indent Request"} subtitle={isEditMode ? "Edit your indent request" : "Request items from inventory"}>
       <div className="space-y-6">
         {/* Request Details */}
         <Card>
@@ -310,15 +364,17 @@ const IndentRequest = () => {
 
         {/* Submit Button */}
         <div className="flex justify-end space-x-4">
-          <Button variant="outline" onClick={() => navigate('/')}>
+          <Button variant="outline" onClick={() => navigate(isEditMode ? '/indent-requests' : '/') }>
             Cancel
           </Button>
           <Button 
-            onClick={submitIndentRequest} 
-            disabled={indentItems.length === 0 || createIndentMutation.isPending}
+            onClick={handleSubmit} 
+            disabled={indentItems.length === 0 || (isEditMode ? updateIndentMutation.isPending : createIndentMutation.isPending)}
           >
             <Send className="w-4 h-4 mr-2" />
-            {createIndentMutation.isPending ? 'Submitting...' : 'Submit Request'}
+            {(isEditMode ? updateIndentMutation.isPending : createIndentMutation.isPending)
+              ? (isEditMode ? 'Updating...' : 'Submitting...')
+              : (isEditMode ? 'Update Request' : 'Submit Request')}
           </Button>
         </div>
       </div>

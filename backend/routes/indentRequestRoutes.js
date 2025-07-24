@@ -7,7 +7,8 @@ const {
   getIndentRequests,
   getIndentRequestById,
   updateIndentRequestStatus,
-  deleteIndentRequest
+  deleteIndentRequest,
+  updateIndentRequest // Import the new function
 } = require('../controllers/indentRequestController');
 
 // Create a new indent request
@@ -18,6 +19,9 @@ router.get('/', authenticate, getIndentRequests);
 
 // Get specific indent request by ID
 router.get('/:id', authenticate, getIndentRequestById);
+
+// Update (edit) indent request (only creator or admin, only if pending)
+router.put('/:id', authenticate, updateIndentRequest);
 
 // Update indent request status (admin only)
 router.patch('/:id/status', authenticate, authorize('admin'), updateIndentRequestStatus);
