@@ -25,13 +25,14 @@ const IndentRequest = () => {
   const [indentItems, setIndentItems] = useState<IndentRequestItem[]>([]);
   const [currentItem, setCurrentItem] = useState<IndentRequestItem>({
     item_name: '',
-    quantity: 1,
+    quantity: 0,
     remarks: '',
     item_id: undefined // Optional, used for linking to existing purchases
   });
   const [department, setDepartment] = useState('');
   const [purpose, setPurpose] = useState('');
   const [priority, setPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal');
+  const [memberId, setMemberId] = useState<number | undefined>(undefined);
   const [stationDepartments, setStationDepartments] = useState<string[]>([]);
   const [isLoadingInitial, setIsLoadingInitial] = useState(isEditMode);
   
@@ -72,7 +73,7 @@ const IndentRequest = () => {
           setPurpose(response.data.purpose);
           setPriority(response.data.priority);
           setIndentItems(response.data.items || []);
-          
+          setMemberId(response.data.member_id);
         } else {
           toast({ title: 'Error', description: 'Failed to load indent request', variant: 'destructive' });
           navigate('/indent-requests');
@@ -99,6 +100,7 @@ const IndentRequest = () => {
       setDepartment('');
       setPurpose('');
       setPriority('normal');
+      setMemberId(undefined);
       navigate('/indent-requests');
     },
     onError: (error: any) => {
@@ -178,7 +180,8 @@ const IndentRequest = () => {
           department,
           purpose,
           priority,
-          items: indentItems
+          items: indentItems,
+          member_id: memberId
         }
       });
     } else {
@@ -186,7 +189,8 @@ const IndentRequest = () => {
         department,
         purpose,
         priority,
-        items: indentItems
+        items: indentItems,
+        member_id: memberId
       });
     }
   };
@@ -221,7 +225,10 @@ const IndentRequest = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="department">Department/Station *</Label>
-                <Select value={department} onValueChange={(value) => setDepartment(value)} disabled={isLoadingStations || !!stationsError}>
+                <Select value={department} onValueChange={(value) => {
+                  setDepartment(value)
+                  setMemberId(stationsData.data.members.find(member => member.name === value)?.id)
+                }} disabled={isLoadingStations || !!stationsError}>
                   <SelectTrigger id="department">
                     <SelectValue placeholder={isLoadingStations ? "Loading stations..." : stationsError ? "Error loading stations" : "Select department/station"} />
                   </SelectTrigger>
@@ -292,9 +299,9 @@ const IndentRequest = () => {
                 <Input
                   id="quantity"
                   type="number"
-                  min="1"
+                  min="0"
                   value={currentItem.quantity}
-                  onChange={(e) => setCurrentItem({...currentItem, quantity: parseInt(e.target.value) || 1})}
+                  onChange={(e) => setCurrentItem({...currentItem, quantity: parseInt(e.target.value) || 0})}
                 />
               </div>
               <div>

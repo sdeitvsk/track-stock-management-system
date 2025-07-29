@@ -6,7 +6,7 @@ import {
   Home, 
   Package, 
   ShoppingCart, 
-  Send, 
+  Lock, 
   Users, 
   FileText, 
   Settings,
@@ -39,6 +39,7 @@ const Sidebar = () => {
     const staffItems = [
       { name: 'Indent Request', href: '/indent-request', icon: ClipboardList, color: 'text-orange-400' },
       { name: 'Requested Indents', href: '/indent-requests', icon: Inbox, color: 'text-pink-400' },
+     
     ];
 
     return isAdmin ? adminItems : staffItems;
@@ -79,6 +80,7 @@ const Sidebar = () => {
                 : 'text-slate-300 hover:bg-gradient-to-r hover:from-slate-800 hover:to-slate-700 hover:text-white hover:shadow-lg hover:transform hover:scale-105'
             }`}
           >
+            
             <item.icon className={`w-5 h-5 ${isActive(item.href) ? 'text-white' : item.color} group-hover:scale-110 transition-transform`} />
             <span className="font-medium">{item.name}</span>
             {isActive(item.href) && (

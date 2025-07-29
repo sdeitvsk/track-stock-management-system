@@ -5,6 +5,8 @@ import ReportRenderer from '../components/Reports/ReportRenderer';
 import { FileBarChart } from 'lucide-react';
 import { getEnabledReports, getReportById } from '../config/reportsConfig';
 import Select from "react-select/creatable";
+import { exportToCsv } from '../utils/reportUtils';
+import { reportsService } from '../services/reportsService';
 
 const AdvancedReports = () => {
   const enabledReports = getEnabledReports();
@@ -23,8 +25,42 @@ const AdvancedReports = () => {
     setFilters({ ...filters });
   };
 
-  const handleExport = () => {
-    console.log('Export functionality to be implemented for:', activeTab);
+  const handleExport = async () => {
+    const reportConfig = getReportById(activeTab);
+    if (!reportConfig) return;
+
+    const reportType = getReportType();
+    let data: any[] = [];
+    let filename = '';
+
+    try {
+      if (reportType === 'transactions') {
+        const response = await reportsService.getTotalTransactions(filters);
+        data = response.data.transactions;
+        filename = 'transactions_report.csv';
+      } else if (reportType === 'stock-detailed') {
+        const response = await reportsService.getStockBalanceDetailed(filters);
+        data = response.data.stock_details;
+        filename = 'stock_detailed_report.csv';
+      } else if (reportType === 'stock-summary') {
+        const response = await reportsService.getStockBalanceSummary(filters);
+        data = response.data.stock_summary;
+        filename = 'stock_summary_report.csv';
+      } else if (reportType === 'items-issued') {
+        const response = await reportsService.getItemsIssued(filters);
+        data = response.data.items_issued;
+        filename = 'items_issued_report.csv';
+      }
+
+      if (data.length) {
+        exportToCsv(data, filename);
+      } else {
+        alert('No data available to export.');
+      }
+    } catch (error) {
+      alert('Failed to export report.');
+      console.error(error);
+    }
   };
 
   const getReportType = () => {
@@ -32,9 +68,10 @@ const AdvancedReports = () => {
     
     switch (currentReport.filterType) {
       case 'date-range':
-        return 'transactions' as const;
+        return activeTab.includes('items-issued') || activeTab.includes('transactions') ? 'items-issued' as const :   'transactions' as const;
       case 'as-on-date':
         return activeTab.includes('detailed') ? 'stock-detailed' as const : 'stock-summary' as const;
+      
       default:
         return 'transactions' as const;
     }

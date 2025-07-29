@@ -39,8 +39,10 @@ const LoginUserForm: React.FC<LoginUserFormProps> = ({
   });
 
   const availableMembers = members.filter(member => 
-    member.type === 'employee' && (!user || member.id === user.member_id)
+    member.type === 'station' && (!user || member.id === user.member_id)
   );
+
+  // const stations = 
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -78,9 +80,10 @@ const LoginUserForm: React.FC<LoginUserFormProps> = ({
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="member_id">Link to Member (Optional)</Label>
+        <Label htmlFor="member_id">Select Station</Label>
         <Select
           value={watch('member_id')?.toString() || 'none'}
+          {...register('member_id', { required: 'Station is required' })}
           onValueChange={(value) => {
             if (value === 'none') {
               setValue('member_id', null);
@@ -90,7 +93,7 @@ const LoginUserForm: React.FC<LoginUserFormProps> = ({
           }}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select a member" />
+            <SelectValue placeholder="Select a station" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">No member</SelectItem>

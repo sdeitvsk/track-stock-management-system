@@ -48,3 +48,27 @@ export const formatFiltersForAPI = (filters: any, reportConfig: ReportConfig) =>
 
   return cleanFilters;
 };
+
+/**
+ * Converts an array of objects to CSV and triggers a download in the browser.
+ * @param data Array of objects to export
+ * @param filename Name of the file to download
+ */
+export function exportToCsv(data: any[], filename: string) {
+  if (!data || !data.length) return;
+  const keys = Object.keys(data[0]);
+  const csvRows = [
+    keys.join(','),
+    ...data.map(row => keys.map(k => '"' + String(row[k] ?? '').replace(/"/g, '""') + '"').join(','))
+  ];
+  const csvString = csvRows.join('\r\n');
+  const blob = new Blob([csvString], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+}

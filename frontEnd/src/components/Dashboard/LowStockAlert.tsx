@@ -51,7 +51,7 @@ const LowStockAlert: React.FC<LowStockAlertProps> = ({ alerts }) => {
                 ></div>
               </div>
               <p className="text-xs text-red-600 mt-1">
-                {alert.stock_percentage.toFixed(1)}%
+                {alert.stock_percentage}%
               </p>
             </div>
           </div>

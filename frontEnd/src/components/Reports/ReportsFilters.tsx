@@ -6,7 +6,7 @@ import { Button } from '../ui/button';
 import { Search, Filter, Download } from 'lucide-react';
 
 interface ReportsFiltersProps {
-  reportType: 'transactions' | 'stock-detailed' | 'stock-summary';
+  reportType: 'transactions' | 'stock-detailed' | 'stock-summary' | 'items-issued';
   filters: {
     start_date?: string;
     end_date?: string;
@@ -57,7 +57,7 @@ const ReportsFilters: React.FC<ReportsFiltersProps> = ({
         </div>
 
         {/* Date Filters based on report type */}
-        {reportType === 'transactions' && (
+        {reportType === 'transactions' || reportType === 'items-issued' && (
           <>
             <div className="space-y-2">
               <Label htmlFor="start_date">From Date</Label>

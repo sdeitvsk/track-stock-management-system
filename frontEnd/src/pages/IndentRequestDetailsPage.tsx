@@ -40,7 +40,7 @@ const IndentRequestDetailsPage: React.FC<IndentRequestDetailsPageProps> = ({
     <div className="w-full mx-auto bg-slate-200 p-8 rounded-lg shadow">
       <h2 className="text-2xl font-bold mb-4">Request Details - #{request.id}</h2>
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div>
             <strong>Department:</strong> {request.department}
           </div>
@@ -58,6 +58,8 @@ const IndentRequestDetailsPage: React.FC<IndentRequestDetailsPageProps> = ({
           </div>
           <div>
             <strong>Date:</strong> {new Date(request.requested_date).toLocaleDateString()}
+          </div>
+          <div>
           </div>
         </div>
         <div>

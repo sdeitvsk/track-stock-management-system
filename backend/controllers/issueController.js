@@ -6,7 +6,7 @@ const createOrUpdateIssue = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const { transaction_id, member_id, items, description, invoice_no, invoice_date } = req.body;
+    const { transaction_id, member_id, items, description, invoice_no, invoice_date, indent_request_id } = req.body;
 
     // 1. Validate member
     const member = await validateMember(member_id);
@@ -22,6 +22,7 @@ const createOrUpdateIssue = async (req, res) => {
       invoice_no,
       invoice_date,
       description,
+      indent_request_id,
       dbTransaction: transaction
     });
 
@@ -66,7 +67,7 @@ async function validateMember(member_id) {
   return await Member.findByPk(member_id);
 }
 
-async function upsertIssueTransaction({ transaction_id, member_id, invoice_no, invoice_date, description, dbTransaction }) {
+async function upsertIssueTransaction({ transaction_id, member_id, invoice_no, invoice_date, description,  indent_request_id, dbTransaction }) {
   if (transaction_id) {
     const transactionRecord = await Transaction.findByPk(transaction_id);
     if (!transactionRecord) throw new Error('Transaction not found');
@@ -75,7 +76,8 @@ async function upsertIssueTransaction({ transaction_id, member_id, invoice_no, i
       member_id,
       invoice_no,
       invoice_date: invoice_date ? new Date(invoice_date) : null,
-      description
+      description,
+      indent_request_id
     }, { transaction: dbTransaction });
 
     return transactionRecord;
@@ -86,7 +88,8 @@ async function upsertIssueTransaction({ transaction_id, member_id, invoice_no, i
     member_id,
     invoice_no,
     invoice_date: invoice_date ? new Date(invoice_date) : null,
-    description
+    description,
+    indent_request_id
   }, { transaction: dbTransaction });
 }
 

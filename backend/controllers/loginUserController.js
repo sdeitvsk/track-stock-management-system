@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 
 const getAllLoginUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '', role = '' } = req.query;
+    const { page = 1, limit = 50, search = '', role = '' } = req.query;
     const offset = (page - 1) * limit;
 
     const whereClause = {};

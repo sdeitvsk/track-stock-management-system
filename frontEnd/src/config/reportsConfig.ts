@@ -47,6 +47,17 @@ export const reportsConfig: ReportConfig[] = [
     enabled: true,
     queryKey: 'stock-balance-summary',
     serviceMethod: 'getStockBalanceSummary'
+  },
+  {
+    id: 'items-issued',
+    title: 'Items Issued',
+    description: 'Items issued report with date filters',
+    icon: Package,
+    color: 'red',
+    filterType: 'date-range',
+    enabled: true,
+    queryKey: 'items-issued',
+    serviceMethod: 'getItemsIssued'
   }
   // Future reports can be easily added here:
   // {

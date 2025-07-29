@@ -28,6 +28,8 @@ import IndentRequests from './pages/IndentRequests';
 import LoginUsers from './pages/LoginUsers';
 import NotFound from './pages/NotFound';
 import IndentRequestDetails from './pages/IndentRequestDetails';
+import ChagePassword from './pages/ChagePassword';
+import PendingItems from './pages/PendingItems';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -172,6 +174,22 @@ function App() {
                 element={
                   <ProtectedRoute adminOnly={true}>
                     <LoginUsers />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/change-password"
+                element={
+                  <ProtectedRoute>
+                    <ChagePassword />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/pending-items"
+                element={
+                  <ProtectedRoute>
+                    <PendingItems />
                   </ProtectedRoute>
                 }
               />

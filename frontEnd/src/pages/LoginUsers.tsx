@@ -38,7 +38,7 @@ const LoginUsers = () => {
 
   const { data: membersData } = useQuery({
     queryKey: ['members'],
-    queryFn: () => inventoryService.getMembers({ type: 'employee', limit: 100 })
+    queryFn: () => inventoryService.getMembers({ type: 'employee, station', limit: 100 })
   });
 
   const createMutation = useMutation({

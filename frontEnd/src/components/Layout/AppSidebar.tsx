@@ -6,7 +6,7 @@ import {
   Home, 
   Package, 
   ShoppingCart, 
-  Send, 
+  Lock, 
   Users, 
   FileText, 
   Settings,
@@ -49,11 +49,13 @@ const AppSidebar = () => {
       { name: 'Login Users', href: '/login-users', icon: UserPlus, color: 'text-emerald-400' },
       { name: 'Reports', href: '/reports', icon: FileText, color: 'text-indigo-400' },
       { name: 'Adv Reports', href: '/advanced-reports', icon: BarChart3, color: 'text-red-400' },
+      { name: 'Pending Items', href: '/pending-items', icon: Inbox, color: 'text-pink-400' },
     ];
 
     const staffItems = [
       { name: 'Indent Request', href: '/indent-request', icon: ClipboardList, color: 'text-orange-400' },
       { name: 'Requested Indents', href: '/indent-requests', icon: Inbox, color: 'text-pink-400' },
+      { name: 'Change Password', href: '/change-password', icon: Lock, color: 'text-red-400' },
     ];
 
     return isAdmin ? adminItems : staffItems;

@@ -4,6 +4,7 @@ import TransactionsReport from './TransactionsReport';
 import StockDetailedReport from './StockDetailedReport';
 import StockSummaryReport from './StockSummaryReport';
 import { ReportConfig } from '../../config/reportsConfig';
+import ItemIssedReport from './ItemIssedReport';
 
 interface ReportRendererProps {
   reportConfig: ReportConfig;
@@ -31,6 +32,13 @@ const ReportRenderer: React.FC<ReportRendererProps> = ({ reportConfig, filters, 
       case 'stock-summary':
         return (
           <StockSummaryReport 
+            filters={filters} 
+            isActive={isActive} 
+          />
+        );
+      case 'items-issued':
+        return (
+          <ItemIssedReport 
             filters={filters} 
             isActive={isActive} 
           />

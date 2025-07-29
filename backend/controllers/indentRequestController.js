@@ -7,7 +7,7 @@ const { createIssue } = require('./issueController'); // Import the createOrUpda
 const createIndentRequest = async (req, res) => {
   
   try {
-    const { department, purpose, priority = 'normal', items } = req.body;
+    const { department, purpose, priority = 'normal', items, member_id } = req.body;
     const requested_by = req.user.username;
 
     // Validate required fields
@@ -19,8 +19,9 @@ const createIndentRequest = async (req, res) => {
     }
 
     // Find the member record for the requesting user
+    /*
     const member = await Member.findOne({ 
-      where: { name: requested_by } 
+      where: { name: department } 
     });
 
     if (!member) {
@@ -29,10 +30,11 @@ const createIndentRequest = async (req, res) => {
         message: 'Member profile not found for the requesting user'
       });
     }
-
-    // Create the main indent request
+    */
+   
+    // Create the main indent request   
     const indentRequest = await IndentRequest.create({
-      member_id: member.id,
+      member_id,
       department,
       purpose,
       priority,
@@ -96,7 +98,7 @@ const getIndentRequests = async (req, res) => {
       });
       
       if (member) {
-        where.member_id = member.id;
+        where.requested_by = member.name;
       } else {
         // If no member record found, return empty result
         return res.json({
@@ -271,16 +273,25 @@ const createIssueFromIndentRequest = async (indentRequest, approved_quantities) 
       const matchingPurchases = availablePurchases.filter(
         p => p.item_request_id === approvedItem.item_id
       );
-      
+
+      let tobeIssued = approvedItem.approved_quantity;
+
       if (matchingPurchases.length > 0) {
-        // Use the first available purchase (FIFO)
-        const purchase = matchingPurchases[0];
-        
-        issueItems.push({
-          item_name: purchase.item_name,
-          quantity: approvedItem.approved_quantity,
-          purchase_id: purchase.id
-        });
+
+        for (const purchase of matchingPurchases) {
+
+          if (tobeIssued === 0) break;
+
+          const issueQuantity = Math.min(tobeIssued, purchase.remaining_quantity);
+
+          issueItems.push({
+            item_name: purchase.item_name,
+            quantity: issueQuantity,
+            purchase_id: purchase.id
+          });
+
+          tobeIssued -= issueQuantity;
+        }
       }
     }
 
@@ -294,7 +305,8 @@ const createIssueFromIndentRequest = async (indentRequest, approved_quantities) 
       items: issueItems,
       description: `Indent Request #${indentRequest.id} - ${indentRequest.purpose}`,
       invoice_no: `IR-${indentRequest.id}`,
-      invoice_date: new Date().toISOString().split('T')[0]
+      invoice_date: new Date().toISOString().split('T')[0],
+      indent_request_id: indentRequest.id
     };
 
     // Create mock request and response objects for the createIssue function
@@ -417,7 +429,7 @@ const updateIndentRequestStatus = async (req, res) => {
 const updateIndentRequest = async (req, res) => {
   try {
     const { id } = req.params;
-    const { department, purpose, priority = 'normal', items } = req.body;
+    const { department, purpose, priority = 'normal', items, member_id } = req.body;
     const username = req.user.username;
     const userRole = req.user.role;
 
@@ -450,6 +462,7 @@ const updateIndentRequest = async (req, res) => {
     }
 
     // Update main fields
+    indentRequest.member_id = member_id;
     indentRequest.department = department;
     indentRequest.purpose = purpose;
     indentRequest.priority = priority;

@@ -97,6 +97,23 @@ class AuthService {
     }
   }
 
+  async changePassword(oldPassword: string, newPassword: string): Promise<{ success: boolean; message: string; token?: string }> {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/change-password`, {
+        oldPassword,
+        newPassword,
+      });
+      // Optionally update token if returned
+      if (response.data?.data?.token) {
+        this.token = response.data.data.token;
+        localStorage.setItem('token', this.token);
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { message: 'Password change failed' };
+    }
+  }
+
   logout(): void {
     this.token = null;
     localStorage.removeItem('token');

@@ -22,6 +22,7 @@ export interface CreateIndentRequestPayload {
   purpose: string;
   priority?: 'low' | 'normal' | 'high' | 'urgent';
   items: IndentRequestItem[];
+  member_id: number;
 }
 
 export interface IndentRequest {

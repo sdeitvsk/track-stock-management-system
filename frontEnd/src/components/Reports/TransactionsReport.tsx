@@ -67,7 +67,7 @@ const TransactionsReport: React.FC<TransactionsReportProps> = ({ filters, isActi
                 <TableRow>
                   <TableHead>ID</TableHead>
                   <TableHead>Member</TableHead>
-                  <TableHead>Invoice/Purpose</TableHead>
+                  <TableHead>Invoice</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Date</TableHead>
                 </TableRow>

@@ -28,6 +28,14 @@ const Transaction = sequelize.define('Transaction', {
     type: DataTypes.DATE,
     allowNull: true
   },
+  indent_request_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'indent_requests',
+      key: 'id'
+    }
+  },
   transaction_date: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW

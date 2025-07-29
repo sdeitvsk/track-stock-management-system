@@ -53,6 +53,21 @@ export interface StockBalanceSummaryResponse {
   };
 }
 
+export interface ItemsIssuedResponse {
+  success: boolean;
+  data: {
+    items_issued: ItemsIssued[];
+    total_count: number;
+  };
+}
+
+export interface ItemsIssued {
+  item_name: string;
+  quantity: number;
+  issue_date: string;
+  name: string;
+}
+
 export const reportsService = {
   // Total Transactions Report
   async getTotalTransactions(filters: {
@@ -67,6 +82,22 @@ export const reportsService = {
     if (filters.search) params.append('search', filters.search);
 
     const response = await axios.get(`${API_BASE_URL}/reports/total-transactions?${params.toString()}`);
+    return response.data;
+  },
+
+  // Items Issued Report
+  async getItemsIssued(filters: {
+    start_date?: string;
+    end_date?: string;
+    search?: string;
+  } = {}): Promise<ItemsIssuedResponse> {
+    const params = new URLSearchParams();
+
+    if (filters.start_date) params.append('start_date', filters.start_date);
+    if (filters.end_date) params.append('end_date', filters.end_date);
+    if (filters.search) params.append('search', filters.search);
+    
+    const response = await axios.get(`${API_BASE_URL}/reports/items-issued?${params.toString()}`);
     return response.data;
   },
 
@@ -95,6 +126,22 @@ export const reportsService = {
     if (filters.search) params.append('search', filters.search);
 
     const response = await axios.get(`${API_BASE_URL}/reports/stock-balance-summary?${params.toString()}`);
+    return response.data;
+  },
+
+  // Pending Items Report
+  async getPendingItems(filters: {
+    start_date?: string;
+    end_date?: string;
+    search?: string;
+  } = {}): Promise<any> {
+    const params = new URLSearchParams();
+
+    if (filters.start_date) params.append('start_date', filters.start_date);
+    if (filters.end_date) params.append('end_date', filters.end_date);
+    if (filters.search) params.append('search', filters.search);
+    
+    const response = await axios.get(`${API_BASE_URL}/reports/pending-items?${params.toString()}`);
     return response.data;
   }
 };

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Eye, CheckCircle, XCircle, Clock, AlertCircle, Pencil } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, Clock, AlertCircle, Pencil, File } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -9,12 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-// Dialog imports removed, now handled in IndentRequestDialog
-import IndentRequestDetailsPage from './IndentRequestDetailsPage';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../components/ui/use-toast';
 import { indentRequestService, IndentRequest } from '../services/indentRequestService';
 import { useAuth } from '../contexts/AuthContext';
+import { exportToCsv } from '../utils/reportUtils';
 
 const IndentRequests = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -25,7 +24,7 @@ const IndentRequests = () => {
   const [currentPage, setCurrentPage] = useState(1);
   
   const { toast } = useToast();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
   // Fetch indent requests with filters
@@ -110,6 +109,20 @@ const IndentRequests = () => {
   // No longer needed: setSelectedRequest for details page
 };
 
+  const handleExport = () => {
+    console.log('Exporting requests...');
+
+    const data = indentRequests.map((request: IndentRequest) => ({
+      id: request.id,
+      department: request.department,
+      purpose: request.purpose,
+      priority: request.priority,
+      status: request.status,
+    }));
+    exportToCsv(data, 'indent_requests.csv');
+  };
+
+
 
   if (isLoading) {
     return (
@@ -181,6 +194,12 @@ const IndentRequests = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Button variant="outline"  onClick={handleExport}>
+                  <File className="w-4 h-4" />
+                  Export  
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -190,7 +209,7 @@ const IndentRequests = () => {
           <CardHeader>
             <CardTitle>
               {isAdmin ? 'All Indent Requests' : 'Your Indent Requests'} 
-              ({pagination?.total || 0})
+              
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -234,7 +253,7 @@ const IndentRequests = () => {
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
-                        {request.status === 'pending' && (isAdmin || request.requested_by === (window.localStorage.getItem('username') || '')) && (
+                        {request.status === 'pending' && (isAdmin || isAuthenticated) && (
                           <Button variant="outline" 
                           size="sm"
                           onClick={() => navigate(`/indent-requests/${request.id}/edit`)}>

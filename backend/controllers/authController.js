@@ -91,7 +91,7 @@ const login = async (req, res) => {
       });
     }
 
-    console.log(password);
+    
     
     // Check password
     const isPasswordValid = await user.comparePassword(password);
@@ -131,6 +131,44 @@ const login = async (req, res) => {
     });
   }
 };
+
+const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const user = await LoginUser.findByPk(req.user.id);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    const isPasswordValid = await user.comparePassword(oldPassword);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
+    await user.update({ password_hash: newPassword });
+    await user.updateLastLogin();
+    const token = generateToken(user.id);
+    res.json({
+      success: true,
+      message: 'Password changed successfully',
+      data: {
+        token
+      }
+    });
+
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error changing password',
+      error: error.message
+    });
+  }
+}
 
 const getProfile = async (req, res) => {
   try {
@@ -172,5 +210,6 @@ const getProfile = async (req, res) => {
 module.exports = {
   register,
   login,
-  getProfile
+  getProfile,
+  changePassword
 };

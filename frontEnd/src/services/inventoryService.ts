@@ -20,6 +20,7 @@ export interface Transaction {
   id: number;
   type: 'purchase' | 'issue';
   member_id: number;
+  department: string | null;
   invoice_no: string | null;
   invoice_date: string | null;
   transaction_date: string;
