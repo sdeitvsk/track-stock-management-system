@@ -287,21 +287,23 @@ const IndentRequest = () => {
 
         {/* Add Items */}
         <Card>
-          <CardHeader>
+          <CardHeader >
             <CardTitle>Add Items</CardTitle>
+           
+            
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr_3fr_1fr] gap-4 items-end">
               <div>
                   <label className="block text-sm font-medium text-gray-700">
-                          Item Name <span className="text-red-500">*</span>
-                        </label>
-                        <CreatableSelect
-                          options={options}
-                          onChange={handleChange}
-                          placeholder="Select or type item name"
-                          isClearable
-                        />
+                    Item Name <span className="text-red-500">*</span>
+                  </label>    
+                <CreatableSelect
+                  options={options}
+                  onChange={handleChange}
+                  placeholder="Select or type item name"
+                  isClearable
+                />
               </div>
               <div>
                 <Label htmlFor="quantity">Quantity *</Label>
@@ -310,7 +312,7 @@ const IndentRequest = () => {
                   type="number"
                   min="0"
                   value={currentItem.quantity}
-                  onChange={(e) => setCurrentItem({...currentItem, quantity: parseInt(e.target.value) || 0})}
+                  onChange={(e) => setCurrentItem({ ...currentItem, quantity: parseInt(e.target.value) || 0 })}
                 />
               </div>
               <div>
@@ -318,7 +320,7 @@ const IndentRequest = () => {
                 <Input
                   id="remarks"
                   value={currentItem.remarks}
-                  onChange={(e) => setCurrentItem({...currentItem, remarks: e.target.value})}
+                  onChange={(e) => setCurrentItem({ ...currentItem, remarks: e.target.value })}
                   placeholder="Optional remarks"
                 />
               </div>

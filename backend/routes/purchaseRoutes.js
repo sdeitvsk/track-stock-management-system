@@ -4,7 +4,8 @@ const {
   savePurchase,
   getAllPurchases,
   getPurchaseById,
-  getDistinctItemNames
+  getDistinctItemNames,
+  syncPurchaseItemsWithProducts
 } = require('../controllers/purchaseController');
 const { authenticate, authorize } = require('../middlewares/authMiddleware');
 const {
@@ -14,6 +15,8 @@ const {
 const { handleValidationErrors } = require('../middlewares/validationMiddleware');
 
 const router = express.Router();
+
+//  /api/purchases
 
 // All routes require authentication
 router.use(authenticate);
@@ -32,6 +35,11 @@ router.get('/', getAllPurchases);
 // @desc    Get distinct item names for autocomplete
 // @access  Private
 router.get('/items/search', getDistinctItemNames);
+
+// @route   POST /api/purchases/sync-products
+// @desc    Sync purchase items with products table
+// @access  Private
+router.post('/sync-products', syncPurchaseItemsWithProducts);
 
 // @route   GET /api/purchases/:id
 // @desc    Get purchase by ID

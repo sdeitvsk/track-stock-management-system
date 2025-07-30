@@ -4,7 +4,8 @@ import { Search, Filter } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Member } from '../../services/inventoryService';
+import { inventoryService, Member } from '../../services/inventoryService';
+import { toast } from '../ui/use-toast';
 
 interface TransactionFiltersProps {
   searchTerm: string;
@@ -42,9 +43,25 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           <Filter className="w-5 h-5 mr-2" />
           Filters
         </h3>
-        <Button variant="outline" onClick={onClearFilters}>
-          Clear All
-        </Button>
+
+         <div className='flex align-center space-x-2 '>
+           <button className='sm justify-between bg-green-400 px-2 py-0.5 text-sm rounded-sm ml-3 mb-1'
+                    onClick={() => {
+                      // Logic to update items can be added here
+                      inventoryService.syncProducts().then(() => {
+                        toast({ title: "Success", description: "Products synced successfully" });
+                      }).catch(() => {
+                        toast({ title: "Error", description: "Failed to sync products", variant: "destructive" });
+                      });
+                      toast({ title: "Info", description: "Update items functionality not implemented yet" });
+                    }}
+                  >Update Items</button>
+                   <Button variant="outline" onClick={onClearFilters}>
+                      Clear All
+                  </Button>
+         </div>
+
+       
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">

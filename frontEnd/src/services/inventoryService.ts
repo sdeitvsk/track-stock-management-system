@@ -224,5 +224,11 @@ export const inventoryService = {
   async getTransactionById(id: string): Promise<ApiResponse<{ transaction: Transaction }>> {
     const response = await axios.get(`${API_BASE_URL}/transactions/${id}`);
     return response.data;
-  }
+  },
+
+   async syncProducts() {
+      // /purchases/sync-products
+      const response = await axios.post(`${API_BASE_URL}/purchases/sync-products`);
+      return response.data;
+    }
 };

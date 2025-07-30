@@ -276,9 +276,56 @@ const getDistinctItemNames = async (req, res) => {
   }
 };
 
+const syncPurchaseItemsWithProducts = async (req, res) => {
+  const transaction = await sequelize.transaction();
+  
+  try {
+    // Insert missing products from purchase table
+    const insertQuery = `
+      INSERT INTO products (item_name)
+      SELECT DISTINCT p1.item_name
+      FROM purchase p1
+      LEFT JOIN products p2 ON p1.item_name = p2.item_name
+      WHERE p2.item_name IS NULL;
+    `;
+    
+    await sequelize.query(insertQuery, { 
+      transaction,
+      type: sequelize.QueryTypes.INSERT 
+    });
+
+    // Update purchase records with item_id
+    const updateQuery = `
+      UPDATE purchase p
+      JOIN products prod ON p.item_name = prod.item_name
+      SET p.item_id = prod.id;
+    `;
+    
+    await sequelize.query(updateQuery, { 
+      transaction,
+      type: sequelize.QueryTypes.UPDATE 
+    });
+
+    await transaction.commit();
+
+    res.json({
+      success: true,
+      message: 'Purchase items synchronized with products successfully'
+    });
+  } catch (error) {
+    await transaction.rollback();
+    res.status(500).json({
+      success: false,
+      message: 'Error synchronizing purchase items with products',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   savePurchase,
   getAllPurchases,
   getPurchaseById,
-  getDistinctItemNames
+  getDistinctItemNames,
+  syncPurchaseItemsWithProducts
 };
