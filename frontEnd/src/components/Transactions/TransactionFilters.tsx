@@ -65,7 +65,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
             <SelectValue placeholder="Transaction Type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
+            
             <SelectItem value="purchase">Purchase</SelectItem>
             <SelectItem value="issue">Issue</SelectItem>
           </SelectContent>

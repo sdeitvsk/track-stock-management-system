@@ -5,19 +5,26 @@ import { Input } from '../ui/input';
 import { inventoryService } from '../../services/inventoryService';
 
 interface ItemNameAutocompleteProps {
+  item_id: number;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
 }
 
+interface Suggestion {
+  id: number;
+  item_name: string;
+}
+
 const ItemNameAutocomplete: React.FC<ItemNameAutocompleteProps> = ({
+  item_id,
   value,
   onChange,
   placeholder = "Enter item name",
   className = ""
 }) => {
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
@@ -33,8 +40,12 @@ const ItemNameAutocomplete: React.FC<ItemNameAutocompleteProps> = ({
     try {
       setLoading(true);
       const response = await inventoryService.searchItemNames(searchTerm);
+      
       if (response.success && response.data) {
-        setSuggestions(response.data.items || []);
+        setSuggestions(response.data.items.map((item: any) => ({
+          id: item.id,
+          item_name: item.item_name
+        })) || []);
       }
     } catch (error) {
       console.error('Error fetching item suggestions:', error);
@@ -59,8 +70,8 @@ const ItemNameAutocomplete: React.FC<ItemNameAutocompleteProps> = ({
     setActiveSuggestion(-1);
   };
 
-  const handleSuggestionClick = (suggestion: string) => {
-    onChange(suggestion);
+  const handleSuggestionClick = (suggestion: { id: number; item_name: string }) => {
+    onChange(suggestion.item_name);
     setShowSuggestions(false);
     setActiveSuggestion(-1);
   };
@@ -142,9 +153,9 @@ const ItemNameAutocomplete: React.FC<ItemNameAutocompleteProps> = ({
             </div>
           )}
           
-          {!loading && suggestions.map((suggestion, index) => (
+          {!loading && suggestions.map((suggestion: any, index: number) => (
             <div
-              key={suggestion}
+              key={suggestion.id}
               ref={el => suggestionRefs.current[index] = el}
               className={`px-3 py-2 text-sm cursor-pointer transition-colors ${
                 index === activeSuggestion
@@ -153,7 +164,7 @@ const ItemNameAutocomplete: React.FC<ItemNameAutocompleteProps> = ({
               }`}
               onClick={() => handleSuggestionClick(suggestion)}
             >
-              {suggestion}
+              {suggestion.item_name}
             </div>
           ))}
         </div>

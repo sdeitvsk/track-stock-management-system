@@ -7,6 +7,8 @@ import { Button } from "../components/ui/button";
 import { indentRequestService } from "../services/indentRequestService";
 import { useAuth } from "../contexts/AuthContext";
 import { AvailablePurchase } from "../services/indentRequestService";
+import { useToast } from '../hooks/use-toast';
+import { Toaster } from "@/components/ui/toaster";
 
 const IndentRequestDetails = () => {
   const { id } = useParams();
@@ -80,7 +82,21 @@ const IndentRequestDetails = () => {
     });
   };
 
+  const { toast } = useToast();
+
   const handleStatusUpdate = (requestId, newStatus, approved_quantities) => {
+    if (
+      newStatus === 'approved' &&
+      Array.isArray(approved_quantities) &&
+      approved_quantities.every(q => !q.approved_quantity || q.approved_quantity === 0)
+    ) {
+      toast({
+        title: 'Error',
+        description: 'Cannot approve request: all approved quantities are zero.',
+        variant: 'destructive'
+      });
+      return;
+    }
     updateStatusMutation.mutate({ id: requestId, status: newStatus, approved_quantities });
   };
 
@@ -111,6 +127,7 @@ const IndentRequestDetails = () => {
         handleStatusUpdate={handleStatusUpdate}
         availablePurchases={availablePurchases}
       />
+      <Toaster />
     </Layout>
   );
 };

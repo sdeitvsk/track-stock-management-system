@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout/Layout';
@@ -8,6 +7,7 @@ import InvoiceHeader from '../components/forms/InvoiceHeader';
 import ItemEntryForm from '../components/forms/ItemEntryForm';
 import ItemsTable from '../components/forms/ItemsTable';
 import PurchaseActions from '../components/forms/PurchaseActions';
+import { Toaster } from "@/components/ui/toaster";
 
 interface InvoiceItem {
   id?: number;
@@ -15,6 +15,7 @@ interface InvoiceItem {
   quantity: number;
   rate: number;
   amount: number;
+  item_id: number;
 }
 
 const PurchaseEntry = () => {
@@ -32,7 +33,8 @@ const PurchaseEntry = () => {
     item_name: '',
     quantity: 0,
     rate: 0,
-    amount: 0
+    amount: 0,
+    item_id: 0
   });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -88,7 +90,8 @@ const PurchaseEntry = () => {
           item_name: purchase.item_name,
           quantity: purchase.quantity,
           rate: parseFloat(purchase.rate),
-          amount: purchase.quantity * parseFloat(purchase.rate)
+          amount: purchase.quantity * parseFloat(purchase.rate),
+          item_id: purchase.item_id
         }));
         
         setInvoiceItems(items);
@@ -106,6 +109,9 @@ const PurchaseEntry = () => {
   };
 
   const handleItemChange = (field: keyof InvoiceItem, value: string | number) => {
+    console.log(field);
+    console.log(value);
+    
     setCurrentItem(prev => ({
       ...prev,
       [field]: value
@@ -138,7 +144,8 @@ const PurchaseEntry = () => {
       item_name: '',
       quantity: 0,
       rate: 0,
-      amount: 0
+      amount: 0,
+      item_id: 0
     });
   };
 
@@ -155,7 +162,8 @@ const PurchaseEntry = () => {
         item_name: '',
         quantity: 0,
         rate: 0,
-        amount: 0
+        amount: 0,
+        item_id: 0
       });
     }
   };
@@ -165,6 +173,7 @@ const PurchaseEntry = () => {
   };
 
   const saveInvoice = async () => {
+  
     if (!invoiceNo || !selectedSupplier || invoiceItems.length === 0) {
       toast({
         title: 'Validation Error',
@@ -174,13 +183,20 @@ const PurchaseEntry = () => {
       return;
     }
 
+   
     setLoading(true);
     try {
+     
+      
       const items = invoiceItems.map(item => ({
-        item_name: item.item_name,
+        item_name: item.item_name,        
+        item_id:item.item_id,
         quantity: item.quantity,
         rate: item.rate
       }));
+
+   
+      
 
       await inventoryService.createPurchase({
         transaction_id: isEditing ? parseInt(editTransactionId!) : undefined,
@@ -252,6 +268,7 @@ const PurchaseEntry = () => {
           onSave={saveInvoice}
         />
       </div>
+      <Toaster />
     </Layout>
   );
 };

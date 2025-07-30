@@ -39,6 +39,7 @@ export interface Purchase {
   remaining_quantity: number;
   purchase_date: string;
   transaction: Transaction;
+  item_id: number;
 }
 
 export interface Issue {

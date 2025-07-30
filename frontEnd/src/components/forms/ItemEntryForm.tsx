@@ -21,7 +21,8 @@ interface ItemEntryFormProps {
   onAddOrUpdateItem: () => void;
 }
 
-const ItemEntryForm: React.FC<ItemEntryFormProps> = ({
+const 
+ItemEntryForm: React.FC<ItemEntryFormProps> = ({
   currentItem,
   editingIndex,
   onItemChange,
@@ -34,6 +35,7 @@ const ItemEntryForm: React.FC<ItemEntryFormProps> = ({
         <div>
           <Label htmlFor="item-name">Item Name *</Label>
           <ItemNameAutocomplete
+            item_id={currentItem.id || 0}
             value={currentItem.item_name}
             onChange={(value) => onItemChange('item_name', value)}
             placeholder="Enter item name"

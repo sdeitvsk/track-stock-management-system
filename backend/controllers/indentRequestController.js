@@ -192,15 +192,19 @@ const getIndentRequestById = async (req, res) => {
         where: { name: req.user.username } 
       });
       
+     
+      
+
       if (member) {
-        where.member_id = member.id;
+        where.requested_by = req.user.username;
       } else {
         return res.status(404).json({
           success: false,
-          message: 'Indent request not found'
+          message: 'Member profile not found for the current user'
         });
       }
     }
+
 
     const indentRequest = await IndentRequest.findOne({
       where,

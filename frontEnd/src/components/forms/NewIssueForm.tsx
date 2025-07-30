@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Textarea } from '../ui/textarea';
+import { Toaster } from "@/components/ui/toaster";
 
 interface NewIssueFormProps {
   onClose: () => void;
@@ -181,6 +182,7 @@ const NewIssueForm: React.FC<NewIssueFormProps> = ({ onClose, onSuccess }) => {
           </div>
         </form>
       </div>
+      <Toaster />
     </div>
   );
 };

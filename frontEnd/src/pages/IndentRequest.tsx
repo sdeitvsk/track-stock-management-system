@@ -14,6 +14,7 @@ import { inventoryService } from '../services/inventoryService';
 import { indentRequestService, IndentRequestItem } from '../services/indentRequestService';
 import { useToast } from '../hooks/use-toast';
 import CreatableSelect from "react-select/creatable";
+import { useAuth } from '../contexts/AuthContext';
 
 
 const IndentRequest = () => {
@@ -21,6 +22,7 @@ const IndentRequest = () => {
   const { id } = useParams();
   const { toast } = useToast();
   const isEditMode = Boolean(id);
+  const { user, isAdmin } = useAuth();
 
   const [indentItems, setIndentItems] = useState<IndentRequestItem[]>([]);
   const [currentItem, setCurrentItem] = useState<IndentRequestItem>({
@@ -60,6 +62,13 @@ const IndentRequest = () => {
       setStationDepartments(names);
     }
   }, [stationsData]);
+
+  useEffect(() => {
+    if (!isAdmin && user) {
+      setDepartment(user.username);
+      setMemberId(user.member_id);
+    }
+  }, [isAdmin, user]);
 
   // Fetch existing indent request if in edit mode
   useEffect(() => {
@@ -228,7 +237,7 @@ const IndentRequest = () => {
                 <Select value={department} onValueChange={(value) => {
                   setDepartment(value)
                   setMemberId(stationsData.data.members.find(member => member.name === value)?.id)
-                }} disabled={isLoadingStations || !!stationsError}>
+                }} disabled={isLoadingStations || !!stationsError || !isAdmin}>
                   <SelectTrigger id="department">
                     <SelectValue placeholder={isLoadingStations ? "Loading stations..." : stationsError ? "Error loading stations" : "Select department/station"} />
                   </SelectTrigger>

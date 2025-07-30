@@ -94,7 +94,10 @@ const Dashboard = () => {
         </div>
 
         {/* Low Stock Alerts */}
-        <LowStockAlert alerts={dashboardData.low_stock_alerts} />
+
+        {dashboardData.low_stock_alerts.length > 0 && (
+          <LowStockAlert alerts={dashboardData.low_stock_alerts} />
+        )}
 
         {/* Recent Inventory */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200">

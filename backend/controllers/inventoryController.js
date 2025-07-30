@@ -245,8 +245,7 @@ const getStockCombo = async (req, res) => {
             inventory_management.purchase
         group by
 			item_id,
-            item_name
-            having sum(remaining_quantity) > 0
+            item_name            
         ORDER BY
             item_name;
 

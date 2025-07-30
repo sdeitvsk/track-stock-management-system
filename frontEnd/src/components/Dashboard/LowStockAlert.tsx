@@ -8,6 +8,9 @@ interface LowStockAlertProps {
 }
 
 const LowStockAlert: React.FC<LowStockAlertProps> = ({ alerts }) => {
+
+
+
   if (alerts.length === 0) {
     return (
       <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">

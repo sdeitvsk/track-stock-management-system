@@ -1,5 +1,5 @@
-
-const { Purchase, Transaction, Member } = require('../models');
+const { Purchase, Transaction, Member} = require('../models');
+const Product = require('../models/products');
 const { sequelize } = require('../config/database');
 
 const savePurchase = async (req, res) => {
@@ -99,11 +99,12 @@ async function syncPurchaseItems({ items, transaction_id, dbTransaction }) {
   }
 
   for (const item of items) {
-    const { id, item_name, quantity, rate } = item;
+    const { id, item_name, item_id, quantity, rate } = item;
 
     if (id) {
       await Purchase.update({
         item_name,
+        item_id,
         quantity,
         rate,
         remaining_quantity: quantity // Adjust as needed for stock tracking
@@ -115,6 +116,7 @@ async function syncPurchaseItems({ items, transaction_id, dbTransaction }) {
       await Purchase.create({
         transaction_id,
         item_name,
+        item_id,
         quantity,
         rate,
         remaining_quantity: quantity
@@ -254,21 +256,16 @@ const getDistinctItemNames = async (req, res) => {
       };
     }
 
-    const items = await Purchase.findAll({
-      attributes: [
-        [sequelize.Sequelize.fn('DISTINCT', sequelize.Sequelize.col('item_name')), 'item_name']
-      ],
+    const items = await Product.findAll({
       where: whereClause,
-      order: [['item_name', 'ASC']],
-      limit: 10,
-      raw: true
+      attributes: ['id','item_name']
     });
 
-    const itemNames = items.map(item => item.item_name);
+    
 
     res.json({
       success: true,
-      data: { items: itemNames }
+      data: { items: items }
     });
   } catch (error) {
     res.status(500).json({

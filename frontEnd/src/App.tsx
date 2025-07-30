@@ -31,6 +31,7 @@ import IndentRequestDetails from './pages/IndentRequestDetails';
 import ChagePassword from './pages/ChagePassword';
 import PendingItems from './pages/PendingItems';
 
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -195,9 +196,10 @@ function App() {
               />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <Toaster position="top-right" richColors closeButton />
           </div>
         </Router>
-        <Toaster position="top-right" richColors closeButton />
+       
       </AuthProvider>
     </QueryClientProvider>
   );

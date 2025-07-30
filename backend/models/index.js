@@ -10,6 +10,7 @@ const Issue = require('./Issue');
 const IndentRequest = require('./IndentRequest');
 const IndentRequestItem = require('./IndentRequestItem');
 
+
 // Define associations
 const defineAssociations = () => {
   // LoginUser-Member association
@@ -50,5 +51,6 @@ module.exports = {
   Purchase,
   Issue,
   IndentRequest,
-  IndentRequestItem
+  IndentRequestItem,
+
 };
