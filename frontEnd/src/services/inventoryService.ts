@@ -7,7 +7,7 @@ const API_BASE_URL =  import.meta.env.VITE_API_URL || 'http://localhost:3000/api
 export interface Member {
   id: number;
   name: string;
-  type: 'employee' | 'supplier' | 'station';
+  type: 'employee' | 'supplier' | 'station' | 'Officer';
   category: string | null;
   department: string | null;
   contact_info: string | null;

@@ -1,9 +1,12 @@
 
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-require('dotenv').config();
+const path = require('path');
+
+
 
 // Import middleware
 const { errorHandler, notFound } = require('./middlewares/errorMiddleware');
@@ -23,8 +26,12 @@ const loginUserRoutes = require('./routes/loginUserRoutes'); // Assuming you hav
 // Import database
 const { sequelize } = require('./config/database');
 
+
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.use(express.static('public'));
 
 // Security middleware
 app.use(helmet());

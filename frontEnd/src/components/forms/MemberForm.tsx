@@ -23,7 +23,7 @@ import { Member } from '../../services/inventoryService';
 
 interface MemberFormData {
   name: string;
-  type: 'employee' | 'supplier' | 'station';
+  type: 'employee' | 'supplier' | 'station' | 'Officer';
   category: string;
   department: string;
   contact_info: string;
@@ -97,6 +97,7 @@ const MemberForm: React.FC<MemberFormProps> = ({
                   <SelectItem value="employee">Employee</SelectItem>
                   <SelectItem value="supplier">Supplier</SelectItem>
                   <SelectItem value="station">Station</SelectItem>
+                  <SelectItem value="Officer">Officer</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

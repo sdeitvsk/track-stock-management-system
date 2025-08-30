@@ -189,6 +189,7 @@ const LoginUsers = () => {
                 <option value="">All Roles</option>
                 <option value="admin">Admin</option>
                 <option value="staff">Staff</option>
+                <option value="Officer">Officer</option>
               </select>
             </div>
 

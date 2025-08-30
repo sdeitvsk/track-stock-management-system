@@ -16,7 +16,7 @@ const Member = sequelize.define('Member', {
     }
   },
   type: {
-    type: DataTypes.ENUM('employee', 'supplier', 'station'),
+    type: DataTypes.ENUM('employee', 'supplier', 'station', 'Officer'),
     defaultValue: 'employee'
   },
   category: {

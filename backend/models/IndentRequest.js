@@ -36,7 +36,7 @@ const IndentRequest = sequelize.define('IndentRequest', {
     defaultValue: 'normal'
   },
   status: {
-    type: DataTypes.ENUM('pending', 'approved', 'rejected', 'partial'),
+    type: DataTypes.ENUM('initiated', 'pending', 'approved', 'rejected', 'partial'),
     defaultValue: 'pending'
   },
   requested_by: {

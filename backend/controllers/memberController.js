@@ -115,6 +115,8 @@ const updateMember = async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
 
+ 
+
     const member = await Member.findByPk(id);
     if (!member) {
       return res.status(404).json({

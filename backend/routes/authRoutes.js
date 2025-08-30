@@ -1,5 +1,5 @@
 const express = require('express');
-const { register, login, getProfile, changePassword } = require('../controllers/authController');
+const { register, login, getProfile, changePassword} = require('../controllers/authController');
 const { authenticate } = require('../middlewares/authMiddleware');
 const { registerValidation, loginValidation } = require('../validators/authValidators');
 const { handleValidationErrors } = require('../middlewares/validationMiddleware');
@@ -22,6 +22,8 @@ router.post('/login', loginValidation, handleValidationErrors, login);
 router.get('/profile', authenticate, getProfile);
 
 router.post('/change-password', authenticate, changePassword);
+
+
 
 
 module.exports = router;

@@ -31,7 +31,7 @@ export interface IndentRequest {
   department: string;
   purpose: string;
   priority: 'low' | 'normal' | 'high' | 'urgent';
-  status: 'pending' | 'approved' | 'rejected' | 'partial';
+  status:  'initiated' | 'pending' | 'approved' | 'rejected' | 'partial';
   requested_by: string;
   requested_date: string;
   approved_by?: string;
@@ -84,7 +84,7 @@ export const indentRequestService = {
 
   // Update indent request status
   updateIndentRequestStatus: async (id: number, data: {
-    status: 'approved' | 'rejected' | 'partial';
+    status: 'initiated' | 'pending' | 'approved' | 'rejected' | 'partial';
     remarks?: string;
     approved_quantities?: Array<{ item_id: number; approved_quantity: number }>;
     available_purchases?: Array<{ item_id: number; remaining_quantity: number, indent_request_id: number, item_name: string }>;

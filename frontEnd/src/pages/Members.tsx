@@ -199,6 +199,7 @@ const Members = () => {
               <option value="employee">Employee</option>
               <option value="supplier">Supplier</option>
               <option value="station">Station</option>
+              <option value="Officer">Officer</option>
             </select>
           </div>
           <Button onClick={handleAddMember}>

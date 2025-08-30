@@ -1,7 +1,7 @@
 
 const jwt = require('jsonwebtoken');
 const { LoginUser, Member } = require('../models');
-
+const bcrypt = require('bcryptjs');
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '24h'
@@ -207,9 +207,12 @@ const getProfile = async (req, res) => {
   }
 };
 
+
 module.exports = {
   register,
   login,
   getProfile,
-  changePassword
+  changePassword,
+ 
+
 };

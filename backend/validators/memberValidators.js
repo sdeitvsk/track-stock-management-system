@@ -7,8 +7,8 @@ const createMemberValidation = [
     .withMessage('Name must be between 2 and 100 characters'),
   
   body('type')
-    .isIn(['employee', 'supplier', 'station'])
-    .withMessage('Type must be employee, supplier, or station'),
+    .isIn(['employee', 'supplier', 'station', 'Officer'])
+    .withMessage('Type must be employee, supplier, station, or Officer'),
   
   body('category')
     .optional()
@@ -42,8 +42,8 @@ const updateMemberValidation = [
   
   body('type')
     .optional()
-    .isIn(['employee', 'supplier', 'station'])
-    .withMessage('Type must be employee, supplier, or station'),
+    .isIn(['employee', 'supplier', 'station', 'Officer'])
+    .withMessage('Type must be employee, supplier, station, or Officer'),
   
   body('category')
     .optional()

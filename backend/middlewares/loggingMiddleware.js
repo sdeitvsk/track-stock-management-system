@@ -13,7 +13,8 @@ const requestLogger = (req, res, next) => {
       ip: req.ip || req.connection.remoteAddress
     };
     
-    console.log('Request Log:', JSON.stringify(logData));
+
+    console.log('\nRequest Log:', JSON.stringify(logData));
   });
   
   next();

@@ -43,7 +43,7 @@ const IndentRequests = () => {
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status, remarks, approved_quantities }: { id: number; status: string; remarks?: string; approved_quantities?: Array<{ item_id: number; approved_quantity: number }> }) =>
       indentRequestService.updateIndentRequestStatus(id, { 
-        status: status as 'approved' | 'rejected' | 'partial',
+        status: status as 'initiated' | 'pending' | 'approved' | 'rejected' | 'partial',
         remarks,
         approved_quantities
       }),
@@ -69,6 +69,7 @@ const IndentRequests = () => {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
+      initiated: { color: 'bg-blue-100 text-blue-800' , icon: Clock },
       pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock },
       approved: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
       rejected: { color: 'bg-red-100 text-red-800', icon: XCircle },
@@ -253,7 +254,7 @@ const IndentRequests = () => {
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
-                        {request.status === 'pending' && (isAdmin || isAuthenticated) && (
+                        {request.status ==='initiated' && (isAdmin || isAuthenticated) && (
                           <Button variant="outline" 
                           size="sm"
                           onClick={() => navigate(`/indent-requests/${request.id}/edit`)}>

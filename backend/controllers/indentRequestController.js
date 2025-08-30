@@ -9,6 +9,7 @@ const createIndentRequest = async (req, res) => {
   try {
     const { department, purpose, priority = 'normal', items, member_id } = req.body;
     const requested_by = req.user.username;
+    let status = 'initiated';
 
     // Validate required fields
     if (!department || !purpose || !items || items.length === 0) {
@@ -16,6 +17,10 @@ const createIndentRequest = async (req, res) => {
         success: false,
         message: 'Department, purpose, and items are required'
       });
+    }
+
+    if (req.user.role === 'admin') {
+      status = 'pending';
     }
 
     // Find the member record for the requesting user
@@ -38,7 +43,8 @@ const createIndentRequest = async (req, res) => {
       department,
       purpose,
       priority,
-      requested_by
+      requested_by,
+      status,
     });
 
     // Create the associated items
@@ -97,7 +103,7 @@ const getIndentRequests = async (req, res) => {
         where: { name: req.user.username } 
       });
       
-      if (member) {
+      if (member) {        
         where.requested_by = member.name;
       } else {
         // If no member record found, return empty result
@@ -137,6 +143,9 @@ const getIndentRequests = async (req, res) => {
     }
 
     const offset = (page - 1) * limit;
+
+    console.log(where);
+    
 
     const { count, rows } = await IndentRequest.findAndCountAll({
       where,
@@ -359,8 +368,9 @@ const updateIndentRequestStatus = async (req, res) => {
 
     // Update the main request
     const updateData = { status, remarks };
-    if (status === 'approved' || status === 'partial') {
+    if (status === 'approved' || status === 'pending') {
       updateData.approved_by = approved_by;
+      updateData.status = status;
       updateData.approved_date = new Date();
     }
 
@@ -433,7 +443,7 @@ const updateIndentRequestStatus = async (req, res) => {
 const updateIndentRequest = async (req, res) => {
   try {
     const { id } = req.params;
-    const { department, purpose, priority = 'normal', items, member_id } = req.body;
+    const { department, purpose, priority = 'normal', items, member_id, status='initiated' } = req.body;
     const username = req.user.username;
     const userRole = req.user.role;
 
@@ -450,7 +460,7 @@ const updateIndentRequest = async (req, res) => {
     }
 
     // Only allow editing if pending
-    if (indentRequest.status !== 'pending') {
+    if (indentRequest.status !== 'pending' && indentRequest.status !== 'initiated') {
       return res.status(400).json({
         success: false,
         message: 'Only pending indent requests can be edited'
@@ -470,6 +480,7 @@ const updateIndentRequest = async (req, res) => {
     indentRequest.department = department;
     indentRequest.purpose = purpose;
     indentRequest.priority = priority;
+    indentRequest.status = status;
     await indentRequest.save();
 
     // Update items: remove old, add new
@@ -522,11 +533,12 @@ const deleteIndentRequest = async (req, res) => {
       });
     }
 
+
     // Check if request can be deleted (only pending requests)
-    if (indentRequest.status !== 'pending') {
+    if (indentRequest.status !== 'pending' && indentRequest.status !== 'initiated') {
       return res.status(400).json({
         success: false,
-        message: 'Only pending indent requests can be deleted'
+        message: 'Only pending or initiated indent requests can be deleted' 
       });
     }
 

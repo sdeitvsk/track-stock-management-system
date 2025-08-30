@@ -118,6 +118,7 @@ const LoginUserForm: React.FC<LoginUserFormProps> = ({
           <SelectContent>
             <SelectItem value="staff">Staff</SelectItem>
             <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="Officer">Officer</SelectItem>
           </SelectContent>
         </Select>
       </div>

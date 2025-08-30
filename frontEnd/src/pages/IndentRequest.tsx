@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Trash2, Send } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
@@ -15,6 +15,7 @@ import { indentRequestService, IndentRequestItem } from '../services/indentReque
 import { useToast } from '../hooks/use-toast';
 import CreatableSelect from "react-select/creatable";
 import { useAuth } from '../contexts/AuthContext';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 const IndentRequest = () => {
@@ -23,6 +24,7 @@ const IndentRequest = () => {
   const { toast } = useToast();
   const isEditMode = Boolean(id);
   const { user, isAdmin } = useAuth();
+  const queryClient = useQueryClient();
 
   const [indentItems, setIndentItems] = useState<IndentRequestItem[]>([]);
   const [currentItem, setCurrentItem] = useState<IndentRequestItem>({
@@ -34,6 +36,7 @@ const IndentRequest = () => {
   const [department, setDepartment] = useState('');
   const [purpose, setPurpose] = useState('');
   const [priority, setPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal');
+  const [status, setStatus] = useState('intiated');
   const [memberId, setMemberId] = useState<number | undefined>(undefined);
   const [stationDepartments, setStationDepartments] = useState<string[]>([]);
   const [isLoadingInitial, setIsLoadingInitial] = useState(isEditMode);
@@ -83,6 +86,7 @@ const IndentRequest = () => {
           setPriority(response.data.priority);
           setIndentItems(response.data.items || []);
           setMemberId(response.data.member_id);
+          setStatus(response.data.status);
         } else {
           toast({ title: 'Error', description: 'Failed to load indent request', variant: 'destructive' });
           navigate('/indent-requests');
@@ -110,6 +114,8 @@ const IndentRequest = () => {
       setPurpose('');
       setPriority('normal');
       setMemberId(undefined);
+      // Invalidate the indentRequests query to ensure fresh data is loaded
+      queryClient.invalidateQueries({ queryKey: ['indentRequests'] });
       navigate('/indent-requests');
     },
     onError: (error: any) => {
@@ -129,6 +135,8 @@ const IndentRequest = () => {
         title: "Success",
         description: "Indent request updated successfully"
       });
+      // Invalidate the indentRequests query to ensure fresh data is loaded
+      queryClient.invalidateQueries({ queryKey: ['indentRequests'] });
       navigate('/indent-requests');
     },
     onError: (error: any) => {
@@ -189,6 +197,7 @@ const IndentRequest = () => {
           department,
           purpose,
           priority,
+          status,
           items: indentItems,
           member_id: memberId
         }
@@ -197,7 +206,7 @@ const IndentRequest = () => {
       createIndentMutation.mutate({
         department,
         purpose,
-        priority,
+        priority,        
         items: indentItems,
         member_id: memberId
       });
@@ -382,9 +391,21 @@ const IndentRequest = () => {
 
         {/* Submit Button */}
         <div className="flex justify-end space-x-4">
-          <Button variant="outline" onClick={() => navigate(isEditMode ? '/indent-requests' : '/') }>
+          <Button variant="outline" onClick={() => navigate(isEditMode ? '/indent-requests' : '/')} >
             Cancel
           </Button>
+          {(isEditMode && (
+            <div className="flex items-center space-x-2 bg-green-300 p-2 rounded-md border border-green-700">
+                <Checkbox 
+                id="pending-status" 
+                  checked={status === 'pending'} 
+                  onCheckedChange={(checked) => setStatus(checked ? 'pending' : 'initiated')}
+              />
+              <Label htmlFor="pending-status" className="text-sm font-medium">{status === 'initiated' ? 'Wating for Approval' : 'Approved'}</Label>
+            </div>
+
+
+          ))}
           <Button 
             onClick={handleSubmit} 
             disabled={indentItems.length === 0 || (isEditMode ? updateIndentMutation.isPending : createIndentMutation.isPending)}
@@ -394,6 +415,7 @@ const IndentRequest = () => {
               ? (isEditMode ? 'Updating...' : 'Submitting...')
               : (isEditMode ? 'Update Request' : 'Submit Request')}
           </Button>
+        
         </div>
       </div>
     </Layout>

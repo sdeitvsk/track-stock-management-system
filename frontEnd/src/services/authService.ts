@@ -11,13 +11,13 @@ interface LoginCredentials {
 interface RegisterData {
   username: string;
   password: string;
-  role?: 'admin' | 'staff';
+  role?: 'admin' | 'staff' | 'Officer';
 }
 
 interface User {
   id: number;
   username: string;
-  role: 'admin' | 'staff';
+  role: 'admin' | 'staff' | 'Officer';
   is_active: boolean;
   last_login: string | null;
   created_at: string;
