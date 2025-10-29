@@ -44,11 +44,12 @@ const AppSidebar = () => {
       { name: 'Inventory', href: '/inventory', icon: Package, color: 'text-green-400' },
       { name: 'Transactions', href: '/transactions', icon: Package, color: 'text-purple-400' },
       { name: 'Indent Request', href: '/indent-request', icon: ClipboardList, color: 'text-orange-400' },
-      { name: 'Requested Indents', href: '/indent-requests', icon: Inbox, color: 'text-pink-400' },
+      { name: 'Indents List', href: '/indent-requests', icon: Inbox, color: 'text-pink-400' },
       { name: 'Members', href: '/members', icon: Users, color: 'text-cyan-400' },
       { name: 'Login Users', href: '/login-users', icon: UserPlus, color: 'text-emerald-400' },
-      { name: 'Reports', href: '/reports', icon: FileText, color: 'text-indigo-400' },
-      { name: 'Adv Reports', href: '/advanced-reports', icon: BarChart3, color: 'text-red-400' },
+      { name: 'Reports', href: '/advanced-reports', icon: BarChart3, color: 'text-red-400' },
+      { name: 'Summary', href: '/reports', icon: FileText, color: 'text-indigo-400' },
+      
       { name: 'Pending Items', href: '/pending-items', icon: Inbox, color: 'text-pink-400' },
     ];
 

@@ -5,7 +5,7 @@ interface User {
   id: number;
   username: string;
   member_id: number | null;
-  role: 'admin' | 'staff';
+  role: 'admin' | 'staff' | 'Officer';
   is_active: boolean;
   last_login: string | null;
   created_at: string;

@@ -98,13 +98,28 @@ const getIndentRequests = async (req, res) => {
     
     // Role-based filtering: non-admins can only see their own requests
     if (req.user.role !== 'admin') {
+      let member;
       // Find the member record for the current user
-      const member = await Member.findOne({ 
-        where: { name: req.user.username } 
-      });
+      if (req.user.role === 'Officer') {
+        member = await Member.findAll({
+          where: { department: req.user.username }
+        });
+      }
+      else {
+        member = await Member.findOne({
+          where: { name: req.user.username }
+        });
+      }
+      
+      
       
       if (member) {        
-        where.requested_by = member.name;
+        if (req.user.role === 'Officer') {
+          const departmentNames = member.map(m => m.name);
+          where.department = { [Op.in]: departmentNames }; 
+        } else  {
+          where.requested_by = member.name;          
+        }
       } else {
         // If no member record found, return empty result
         return res.json({
@@ -196,7 +211,7 @@ const getIndentRequestById = async (req, res) => {
     const where = { id };
     
     // Role-based filtering: non-admins can only see their own requests
-    if (req.user.role !== 'admin') {
+    if (req.user.role !== 'admin' && req.user.role !== 'Officer') {
       const member = await Member.findOne({ 
         where: { name: req.user.username } 
       });
@@ -467,8 +482,10 @@ const updateIndentRequest = async (req, res) => {
       });
     }
 
+    console.log('User Role:', userRole, 'Requested By:', indentRequest.requested_by);
+    
     // Only creator or admin can edit
-    if (userRole !== 'admin' && indentRequest.requested_by !== username) {
+    if (userRole !== 'admin' && userRole !== 'Officer' && indentRequest.requested_by !== username) {
       return res.status(403).json({
         success: false,
         message: 'You are not authorized to edit this indent request'

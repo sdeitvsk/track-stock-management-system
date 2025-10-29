@@ -39,13 +39,41 @@ const LoginUserForm: React.FC<LoginUserFormProps> = ({
   });
 
   const availableMembers = members.filter(member => 
-    member.type === 'station' && (!user || member.id === user.member_id)
+    member.type !== 'supplier' && (!user || member.id === user.member_id)
   );
 
   // const stations = 
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-2">
+        <Label htmlFor="member_id">Select</Label>
+        <Select
+          value={watch('member_id')?.toString() || 'none'}
+          {...register('member_id', { required: 'Station is required' })}
+          onValueChange={(value) => {
+            if (value === 'none') {
+              setValue('member_id', null);
+            } else {
+              setValue('member_id', parseInt(value));
+              setValue('username', availableMembers.find(m => m.id === parseInt(value))?.name || '');
+            }
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select a station" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">No member</SelectItem>
+            {availableMembers.map((member) => (
+              <SelectItem key={member.id} value={member.id.toString()}>
+                {member.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="username">Username</Label>
         <Input
@@ -79,32 +107,7 @@ const LoginUserForm: React.FC<LoginUserFormProps> = ({
         </div>
       )}
 
-      <div className="space-y-2">
-        <Label htmlFor="member_id">Select Station</Label>
-        <Select
-          value={watch('member_id')?.toString() || 'none'}
-          {...register('member_id', { required: 'Station is required' })}
-          onValueChange={(value) => {
-            if (value === 'none') {
-              setValue('member_id', null);
-            } else {
-              setValue('member_id', parseInt(value));
-            }
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select a station" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">No member</SelectItem>
-            {availableMembers.map((member) => (
-              <SelectItem key={member.id} value={member.id.toString()}>
-                {member.name} - {member.department}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+    
 
       <div className="space-y-2">
         <Label htmlFor="role">Role</Label>

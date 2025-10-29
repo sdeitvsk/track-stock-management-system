@@ -369,7 +369,19 @@ const IndentRequest = () => {
                   indentItems.map((item, index) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{item.item_name}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const updatedItems = [...indentItems];
+                            updatedItems[index].quantity = parseInt(e.target.value) || 0;
+                            setIndentItems(updatedItems);
+                          }}
+                          className="w-20"
+                        />
+                      </TableCell>
                       <TableCell>{item.remarks || '-'}</TableCell>
                       <TableCell>
                         <Button
@@ -392,9 +404,9 @@ const IndentRequest = () => {
         {/* Submit Button */}
         <div className="flex justify-end space-x-4">
           <Button variant="outline" onClick={() => navigate(isEditMode ? '/indent-requests' : '/')} >
-            Cancel
+            Cancel 
           </Button>
-          {(isEditMode && (
+          {(isEditMode && (user?.role === 'admin' || user?.role === 'Officer')) && (
             <div className="flex items-center space-x-2 bg-green-300 p-2 rounded-md border border-green-700">
                 <Checkbox 
                 id="pending-status" 
@@ -402,10 +414,11 @@ const IndentRequest = () => {
                   onCheckedChange={(checked) => setStatus(checked ? 'pending' : 'initiated')}
               />
               <Label htmlFor="pending-status" className="text-sm font-medium">{status === 'initiated' ? 'Wating for Approval' : 'Approved'}</Label>
+              
             </div>
 
 
-          ))}
+          )}
           <Button 
             onClick={handleSubmit} 
             disabled={indentItems.length === 0 || (isEditMode ? updateIndentMutation.isPending : createIndentMutation.isPending)}

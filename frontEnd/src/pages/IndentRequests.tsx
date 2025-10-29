@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Eye, CheckCircle, XCircle, Clock, AlertCircle, Pencil, File } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, Clock, AlertCircle, Pencil, File,   RefreshCcw } from 'lucide-react';
 import Layout from '../components/Layout/Layout';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -28,7 +28,7 @@ const IndentRequests = () => {
   const queryClient = useQueryClient();
 
   // Fetch indent requests with filters
-  const { data: requestsData, isLoading, error } = useQuery({
+  const { data: requestsData, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ['indentRequests', statusFilter, priorityFilter, searchTerm, currentPage],
     queryFn: () => indentRequestService.getIndentRequests({
       status: statusFilter !== 'all' ? statusFilter : undefined,
@@ -199,6 +199,18 @@ const IndentRequests = () => {
                 <Button variant="outline"  onClick={handleExport}>
                   <File className="w-4 h-4" />
                   Export  
+                </Button>
+                <Button variant="outline" onClick={() => {
+                  setCurrentPage(1);
+                  refetch();
+                  toast({
+                    title: "Refreshed",
+                    description: "Indent requests have been refreshed"
+                    
+                  });
+                }} disabled={isFetching} >
+                  <RefreshCcw className="w-4 h-4 m-0.5"  />
+                  Refresh
                 </Button>
               </div>
             </div>

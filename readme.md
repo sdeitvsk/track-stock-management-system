@@ -2,7 +2,7 @@
 ### https://lovable.dev/projects/1a0b8fcf-c866-4423-8e5e-3c0d2dfe1687
 ## Backup
 ```sql
-mysqldump -u root -p inventory_management > inventory_management_date.sql
+mysqldump -u root -p inventory_management > D:\inventory_management_date.sql
 
 ```
 ## Restore

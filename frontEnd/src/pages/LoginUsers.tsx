@@ -37,8 +37,7 @@ const LoginUsers = () => {
   });
 
   const { data: membersData } = useQuery({
-    queryKey: ['members'],
-    queryFn: () => inventoryService.getMembers({ type: 'employee, station', limit: 100 })
+    queryKey: ['members'],    queryFn: () => inventoryService.getMembers({ type: 'employee, station, Officer', limit: 100 })
   });
 
   const createMutation = useMutation({
@@ -162,7 +161,10 @@ const LoginUsers = () => {
                 </DialogHeader>
                 <LoginUserForm
                   members={membersData?.data?.members || []}
-                  onSubmit={(data) => createMutation.mutate(data)}
+                  onSubmit={(data) => {
+                    console.log(data);
+                    createMutation.mutate(data);
+                  }}
                   isLoading={createMutation.isPending}
                 />
               </DialogContent>

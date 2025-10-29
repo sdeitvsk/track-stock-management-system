@@ -128,10 +128,10 @@ const MemberForm: React.FC<MemberFormProps> = ({
           name="department"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Department</FormLabel>
+              <FormLabel>Officer</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="Enter department"
+                  placeholder="Enter officer name"
                   {...field}
                   disabled={isLoading}
                 />
