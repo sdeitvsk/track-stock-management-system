@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 
 interface InvoiceItem {
   id?: number;
+  item_id: number;
   item_name: string;
   quantity: number;
   rate: number;
@@ -34,6 +35,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Item ID</TableHead>
               <TableHead>Item Name</TableHead>
               <TableHead>Quantity</TableHead>
               <TableHead>Rate</TableHead>
@@ -51,6 +53,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
             ) : (
               invoiceItems.map((item, index) => (
                 <TableRow key={index}>
+                  <TableCell className="font-medium">{item.item_id}</TableCell>
                   <TableCell className="font-medium">{item.item_name}</TableCell>
                   <TableCell>{item.quantity}</TableCell>
                   <TableCell>₹ {item.rate.toFixed(2)}</TableCell>

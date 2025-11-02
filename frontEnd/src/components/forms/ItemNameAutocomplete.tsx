@@ -8,6 +8,7 @@ interface ItemNameAutocompleteProps {
   item_id: number;
   value: string;
   onChange: (value: string) => void;
+  updateItem_id: (value: number) => void;
   placeholder?: string;
   className?: string;
 }
@@ -21,6 +22,7 @@ const ItemNameAutocomplete: React.FC<ItemNameAutocompleteProps> = ({
   item_id,
   value,
   onChange,
+  updateItem_id,
   placeholder = "Enter item name",
   className = ""
 }) => {
@@ -72,6 +74,7 @@ const ItemNameAutocomplete: React.FC<ItemNameAutocompleteProps> = ({
 
   const handleSuggestionClick = (suggestion: { id: number; item_name: string }) => {
     onChange(suggestion.item_name);
+    updateItem_id(suggestion.id);
     setShowSuggestions(false);
     setActiveSuggestion(-1);
   };
@@ -126,7 +129,7 @@ const ItemNameAutocomplete: React.FC<ItemNameAutocompleteProps> = ({
   }, [activeSuggestion]);
 
   return (
-    <div className="relative">
+    <div className="relative">      
       <Input
         ref={inputRef}
         value={value}

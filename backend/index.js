@@ -73,7 +73,7 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/indent-requests', indentRequestRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/login-users', loginUserRoutes); // Assuming you have this route
-
+app.use('/api/products', require('./routes/productsRoutes'));
 // Error handling middleware
 app.use(notFound);
 app.use(errorHandler);

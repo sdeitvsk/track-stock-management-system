@@ -8,6 +8,7 @@ import ItemEntryForm from '../components/forms/ItemEntryForm';
 import ItemsTable from '../components/forms/ItemsTable';
 import PurchaseActions from '../components/forms/PurchaseActions';
 import { Toaster } from "@/components/ui/toaster";
+import productService from '../services/productService';
 
 interface InvoiceItem {
   id?: number;
@@ -109,45 +110,101 @@ const PurchaseEntry = () => {
   };
 
   const handleItemChange = (field: keyof InvoiceItem, value: string | number) => {
-    console.log(field);
-    console.log(value);
-    
     setCurrentItem(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const addOrUpdateItem = () => {
-    if (!currentItem.item_name || currentItem.quantity <= 0 || currentItem.rate <= 0) {
+  const addOrUpdateItem = async () => {
+  // make a shallow copy to work with immediately
+  let itemToSave = { ...currentItem };
+
+  // If no item_id, create product and update the local item object
+  if (!itemToSave.item_id) {
+    toast({
+      title: `Product not found, creating new product...`,
+      description: 'Please select a valid item',
+    });
+
+    try {
+      const newProduct = await productService.createProduct({ item_name: itemToSave.item_name });
+
+      console.log('New product created:', newProduct);
+
+      // adapt to whatever your API returns (id, productId, etc.)
+      const newId = newProduct.id;
+      if (!newId) {
+        throw new Error('Created product did not return an id');
+      }
+
+      // set local item id so subsequent validation uses it
+      itemToSave.item_id = newId;
+
+      // also update component state so the UI reflects the created product
+      setCurrentItem(prev => ({
+        ...prev,
+        item_id: newId,
+      }));
+    } catch (error) {
+      console.error('Failed to create product:', error);
       toast({
-        title: 'Validation Error',
-        description: 'Please fill all item fields with valid values',
+        title: 'Error',
+        description: 'Failed to create product',
         variant: 'destructive'
       });
-      return;
+      return; // stop if product creation failed
     }
+  }
 
-    if (editingIndex !== null) {
-      // Update existing item
-      const updatedItems = [...invoiceItems];
-      updatedItems[editingIndex] = { ...currentItem };
-      setInvoiceItems(updatedItems);
-      setEditingIndex(null);
-    } else {
-      // Add new item
-      setInvoiceItems(prev => [ { ...currentItem }, ...prev]);
-    }
+  // compute amount (optional but recommended)
+  itemToSave.amount = (itemToSave.quantity || 0) * (itemToSave.rate || 0);
 
-    // Reset current item
-    setCurrentItem({
-      item_name: '',
-      quantity: 0,
-      rate: 0,
-      amount: 0,
-      item_id: 0
-    });
-  };
+// validate using the local item copy
+const validationErrors: string[] = [];
+
+if (!itemToSave.item_name?.trim()) {
+  validationErrors.push('Item name is required');
+}
+if (!itemToSave.item_id) {
+  validationErrors.push('Product ID is missing or invalid');
+}
+if (itemToSave.quantity <= 0) {
+  validationErrors.push('Quantity must be greater than 0');
+}
+if (itemToSave.rate <= 0) {
+  validationErrors.push('Rate must be greater than 0');
+}
+
+if (validationErrors.length > 0) {
+  toast({
+    title: 'Validation Error',
+    description: validationErrors.join(', '),
+    variant: 'destructive',
+  });
+  return;
+}
+
+  // now use itemToSave for add/update
+  if (editingIndex !== null) {
+    const updatedItems = [...invoiceItems];
+    updatedItems[editingIndex] = { ...itemToSave };
+    setInvoiceItems(updatedItems);
+    setEditingIndex(null);
+  } else {
+    setInvoiceItems(prev => [{ ...itemToSave }, ...prev]);
+  }
+
+  // Reset currentItem in state (clear form)
+  setCurrentItem({
+    item_name: '',
+    quantity: 0,
+    rate: 0,
+    amount: 0,
+    item_id: 0
+  });
+};
+
 
   const editItem = (index: number) => {
     setCurrentItem({ ...invoiceItems[index] });

@@ -9,6 +9,7 @@ import ItemNameAutocomplete from './ItemNameAutocomplete';
 interface InvoiceItem {
   id?: number;
   item_name: string;
+  item_id: number;
   quantity: number;
   rate: number;
   amount: number;
@@ -17,7 +18,7 @@ interface InvoiceItem {
 interface ItemEntryFormProps {
   currentItem: InvoiceItem;
   editingIndex: number | null;
-  onItemChange: (field: keyof InvoiceItem, value: string | number) => void;
+  onItemChange: (field: keyof InvoiceItem, value: string | number) => void; 
   onAddOrUpdateItem: () => void;
 }
 
@@ -38,6 +39,7 @@ ItemEntryForm: React.FC<ItemEntryFormProps> = ({
             item_id={currentItem.id || 0}
             value={currentItem.item_name}
             onChange={(value) => onItemChange('item_name', value)}
+            updateItem_id ={(value) => onItemChange('item_id', value)}
             placeholder="Enter item name"
           />
         </div>

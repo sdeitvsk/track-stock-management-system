@@ -43,8 +43,8 @@ const AppSidebar = () => {
       { name: 'Dashboard', href: '/', icon: Home, color: 'text-blue-400' },
       { name: 'Inventory', href: '/inventory', icon: Package, color: 'text-green-400' },
       { name: 'Transactions', href: '/transactions', icon: Package, color: 'text-purple-400' },
-      { name: 'Indent Request', href: '/indent-request', icon: ClipboardList, color: 'text-orange-400' },
-      { name: 'Indents List', href: '/indent-requests', icon: Inbox, color: 'text-pink-400' },
+      { name: 'New Request', href: '/indent-request', icon: ClipboardList, color: 'text-orange-400' },
+      { name: 'Request List', href: '/indent-requests', icon: Inbox, color: 'text-pink-400' },
       { name: 'Members', href: '/members', icon: Users, color: 'text-cyan-400' },
       { name: 'Login Users', href: '/login-users', icon: UserPlus, color: 'text-emerald-400' },
       { name: 'Reports', href: '/advanced-reports', icon: BarChart3, color: 'text-red-400' },
@@ -54,8 +54,8 @@ const AppSidebar = () => {
     ];
 
     const staffItems = [
-      { name: 'Indent Request', href: '/indent-request', icon: ClipboardList, color: 'text-orange-400' },
-      { name: 'Requested Indents', href: '/indent-requests', icon: Inbox, color: 'text-pink-400' },
+      { name: 'New Request', href: '/indent-request', icon: ClipboardList, color: 'text-orange-400' },
+      { name: 'Request List', href: '/indent-requests', icon: Inbox, color: 'text-pink-400' },
       { name: 'Change Password', href: '/change-password', icon: Lock, color: 'text-red-400' },
     ];
 

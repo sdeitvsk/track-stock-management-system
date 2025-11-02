@@ -5,15 +5,17 @@ const saveProduct = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const { name } = req.body;
+    const { item_name } = req.body;
+    console.log('\n\n body \n\n', req.body);
+    
 
-    if (!name || typeof name !== 'string' || name.length < 2) {
+    if (!item_name || typeof item_name !== 'string' || item_name.length < 2) {
       return res.status(400).json({ success: false, message: 'Invalid product name' });
     }
 
     const [product, created] = await Products.findOrCreate({
-      where: { name },
-      defaults: { name },
+      where: { item_name },
+      defaults: { item_name },
       transaction
     });
 

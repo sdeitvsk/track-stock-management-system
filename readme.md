@@ -14,6 +14,10 @@ USE inventory_management;
 SOURCE H:\POS\Kranthi\00Resource\SQL\inventory_management_12072027.sql;
 
 ```
+```sql
+    CREATE DATABASE IF NOT EXISTS inventory_management_1;
+```
+
 ```
 
 ngrok http http://localhost:90  

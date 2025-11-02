@@ -58,23 +58,12 @@ const getStockBalanceDetailed = async (req, res) => {
     }
 
     const query = `
-      WITH tiu AS (
-        SELECT i.purchase_id, i.quantity FROM issue i
-        ${as_on_date ? `WHERE i.issue_date <= '${as_on_date}'` : ''}
-        
-      ), 
-      TotalIssues AS (
-        SELECT purchase_id, SUM(quantity) as Total_issues 
-        FROM tiu 
-        GROUP BY purchase_id
-      ) 
-      SELECT p.id, p.item_name, p.quantity as Purchase, 
-             COALESCE(ti.Total_issues, 0) as Total_issues, 
-             p.remaining_quantity  
-      FROM TotalIssues ti 
-      RIGHT JOIN purchase p ON ti.purchase_id = p.id
-      ${dateFilter} ${searchFilter}
-      ORDER BY p.item_name
+      SELECT id, item_name, total_purchased as Purchase, 
+              total_issued  as Total_issues, 
+             if(remaining_quantity<0,0,remaining_quantity)   as  remaining_quantity 
+      FROM v_Current_StockBalance 
+       ${searchFilter}
+      ORDER BY item_name
     `;
 
     const [results] = await sequelize.query(query);
@@ -111,28 +100,14 @@ const getStockBalanceSummary = async (req, res) => {
       searchFilter = searchCondition;
     }
 
-    const query = `
-      WITH tiu AS (
-        SELECT i.purchase_id, i.quantity 
-        FROM issue i
-        ${as_on_date ? `WHERE i.issue_date <= '${as_on_date}'` : ''}
-       
-      ), 
-      TotalIssues AS (
-        SELECT purchase_id, SUM(quantity) AS total_issues 
-        FROM tiu 
-        GROUP BY purchase_id
-      )
-      SELECT 
-        p.item_name,
-        SUM(p.quantity) AS total_purchase,
-        SUM(COALESCE(ti.total_issues, 0)) AS total_issued,
-        SUM(p.remaining_quantity) AS total_balance
-      FROM purchase p
-      LEFT JOIN TotalIssues ti ON ti.purchase_id = p.id
-      ${dateFilter} ${searchFilter}
-      GROUP BY p.item_name
-      ORDER BY p.item_name
+    const query = `     
+
+       SELECT  item_name, total_purchased  as total_purchase, 
+              total_issued , 
+             if(remaining_quantity<0,0,remaining_quantity)   as total_balance
+      FROM v_Current_StockBalance 
+       ${searchFilter}
+       ORDER BY item_name
     `;
 
     const [results] = await sequelize.query(query);
@@ -173,6 +148,28 @@ const getItemsIssued = async (req, res) => {
     const query = `
       SELECT i.item_name, i.quantity, i.issue_date, m.name from issue i JOIN members m ON i.member_id = m.id ${dateFilter} ${searchFilter}
       ORDER BY i.issue_date DESC
+
+      SELECT
+        iri.item_id,
+        iri.item_name,
+        SUM(iri.approved_quantity) AS issued
+    FROM
+        indent_request_items iri
+    WHERE
+        iri.approved_quantity > 0
+    GROUP BY
+        iri.item_id,
+        iri.item_name
+    UNION ALL
+    SELECT
+        item_id,
+        item_name,
+        SUM(quantity) AS issued
+    FROM
+        issue
+    GROUP BY
+        item_id,
+        item_name
     `
 
     console.log(query);

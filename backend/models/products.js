@@ -11,6 +11,9 @@ const Products = sequelize.define('products', {
     type: DataTypes.STRING,
     allowNull: false
   } 
+}, {
+  tableName: 'products',
+  timestamps: false
 });
 
 module.exports = Products;

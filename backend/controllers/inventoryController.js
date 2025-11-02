@@ -12,36 +12,31 @@ const getInventorySummary = async (req, res) => {
 
     // Get inventory summary using raw SQL for better performance
     const inventoryQuery = `
-      SELECT 
+       SELECT
         p.item_name,
-        SUM(p.quantity) as total_purchased,
-        SUM(p.remaining_quantity) as current_stock,
-        SUM(p.quantity - p.remaining_quantity) as total_issued,
-        AVG(p.rate) as average_rate,
-        SUM(p.quantity * p.rate) as total_value,
-        SUM(p.remaining_quantity * p.rate) as current_value,
-        MIN(p.purchase_date) as first_purchase_date,
-        MAX(p.purchase_date) as last_purchase_date,
-        COUNT(DISTINCT p.id) as purchase_batches
-      FROM purchase p
-      ${item_name ? `WHERE p.item_name LIKE '%${item_name}%'` : ''}
-      GROUP BY p.item_name
-      ORDER BY p.item_name
+        total_purchased,
+        p.remaining_quantity current_stock,
+        total_issued,
+        average_rate,
+        (p.total_purchased * p.average_rate) AS total_value,
+        if(remaining_quantity<0,0,remaining_quantity) * p.average_rate AS current_value,
+        first_purchase_date,
+        last_purchase_date,
+        purchase_batches
+      FROM v_Current_StockBalance p      
+      ${item_name ? `WHERE p.item_name LIKE '%${item_name}%'` : ''}     
     `;
 
     const [inventorySummary] = await sequelize.query(inventoryQuery);
 
     // Get low stock items (items with remaining quantity < 10% of total purchased)
     const lowStockQuery = `
-      SELECT 
-        p.item_name,
-        SUM(p.quantity) as total_purchased,
-        SUM(p.remaining_quantity) as current_stock,
-        ROUND((SUM(p.remaining_quantity) / SUM(p.quantity)) * 100, 2) as stock_percentage
-      FROM purchase p
-      GROUP BY p.item_name
-      HAVING stock_percentage < 10
-      ORDER BY stock_percentage ASC
+      with tb1 as (
+SELECT p.item_name, total_purchased, 
+  if(remaining_quantity<0,0,remaining_quantity) as  current_stock,   
+  ROUND(((if(remaining_quantity<0,0,remaining_quantity)) / (p.total_purchased)) * 100, 2) as stock_percentage      
+  FROM v_Current_StockBalance p
+) select  * from tb1 p where  stock_percentage < 10 ORDER BY stock_percentage ASC;
     `;
 
     const [lowStockItems] = await sequelize.query(lowStockQuery);
@@ -236,17 +231,9 @@ const getStockCombo = async (req, res) => {
   try {
     // Get value summary for purchases
     const valueQuery = `     
-        SELECT 
-            item_id as id,
-            item_name,
-            sum(remaining_quantity) as remaining_quantity,
-            count(*) cnt
-        FROM
-            inventory_management.purchase
-        group by
-			item_id,
-            item_name            
-        ORDER BY
+  select id, item_name, 
+  if(remaining_quantity<0,0,remaining_quantity) as  remaining_quantity 
+  from v_Current_StockBalance
             item_name;
 
     `;
